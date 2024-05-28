@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["resolve_fn_def","try_to_devirtualize"]};

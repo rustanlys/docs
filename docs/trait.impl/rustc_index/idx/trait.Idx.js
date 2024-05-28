@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"rupta":[["impl Idx for <a class=\"struct\" href=\"rupta/mir/context/struct.ContextId.html\" title=\"struct rupta::mir::context::ContextId\">ContextId</a>"],["impl Idx for <a class=\"struct\" href=\"rupta/mir/function/struct.FuncId.html\" title=\"struct rupta::mir::function::FuncId\">FuncId</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

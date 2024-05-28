@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["PTAType"],"mod":["andersen","context_sensitive","context_strategy","propagator"],"struct":["PTACallbacks"],"trait":["PointerAnalysis"],"type":["DiffPTDataTy","EdgeId","NodeId","PointsTo"]};

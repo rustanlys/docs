@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["PAGEdgeEnum"],"struct":["PAG","PAGEdge","PAGNode"],"trait":["PAGPath"],"type":["PAGEdgeId","PAGNodeId"]};

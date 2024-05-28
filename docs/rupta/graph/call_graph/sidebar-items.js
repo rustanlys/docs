@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["CallGraph","CallGraphEdge","CallGraphNode"],"trait":["CGCallSite","CGFunction"],"type":["CGEdgeId","CGNodeId","CSCallGraph"]};

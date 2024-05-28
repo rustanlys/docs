@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CallType"],"struct":["AssocCallGroup","BaseCallSiteS","CallSiteS","ExtCallSiteS"],"type":["BaseCallSite","CSBaseCallSite","CSCallSite","CallSite","CalleeIdentifier"]};

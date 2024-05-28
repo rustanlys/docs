@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["PathEnum","PathSelector"],"struct":["CSPath","Path"],"trait":["PathSupport"],"type":["ProjectionElems"]};

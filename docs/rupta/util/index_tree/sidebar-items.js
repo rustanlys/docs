@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["NodeEdge"],"struct":["Children","Descendants","IndexTree","Node","Traverse"]};

@@ -1,0 +1,459 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/util/options.rs`."><title>options.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rupta" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0-nightly (bf3c6c5be 2024-02-01)" data-channel="nightly" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../rupta/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<a href="#2" id="2">2</a>
+<a href="#3" id="3">3</a>
+<a href="#4" id="4">4</a>
+<a href="#5" id="5">5</a>
+<a href="#6" id="6">6</a>
+<a href="#7" id="7">7</a>
+<a href="#8" id="8">8</a>
+<a href="#9" id="9">9</a>
+<a href="#10" id="10">10</a>
+<a href="#11" id="11">11</a>
+<a href="#12" id="12">12</a>
+<a href="#13" id="13">13</a>
+<a href="#14" id="14">14</a>
+<a href="#15" id="15">15</a>
+<a href="#16" id="16">16</a>
+<a href="#17" id="17">17</a>
+<a href="#18" id="18">18</a>
+<a href="#19" id="19">19</a>
+<a href="#20" id="20">20</a>
+<a href="#21" id="21">21</a>
+<a href="#22" id="22">22</a>
+<a href="#23" id="23">23</a>
+<a href="#24" id="24">24</a>
+<a href="#25" id="25">25</a>
+<a href="#26" id="26">26</a>
+<a href="#27" id="27">27</a>
+<a href="#28" id="28">28</a>
+<a href="#29" id="29">29</a>
+<a href="#30" id="30">30</a>
+<a href="#31" id="31">31</a>
+<a href="#32" id="32">32</a>
+<a href="#33" id="33">33</a>
+<a href="#34" id="34">34</a>
+<a href="#35" id="35">35</a>
+<a href="#36" id="36">36</a>
+<a href="#37" id="37">37</a>
+<a href="#38" id="38">38</a>
+<a href="#39" id="39">39</a>
+<a href="#40" id="40">40</a>
+<a href="#41" id="41">41</a>
+<a href="#42" id="42">42</a>
+<a href="#43" id="43">43</a>
+<a href="#44" id="44">44</a>
+<a href="#45" id="45">45</a>
+<a href="#46" id="46">46</a>
+<a href="#47" id="47">47</a>
+<a href="#48" id="48">48</a>
+<a href="#49" id="49">49</a>
+<a href="#50" id="50">50</a>
+<a href="#51" id="51">51</a>
+<a href="#52" id="52">52</a>
+<a href="#53" id="53">53</a>
+<a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+</pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
+//
+// This source code is licensed under the GNU license found in the
+// LICENSE file in the root directory of this source tree.
+
+</span><span class="kw">use </span>itertools::Itertools;
+
+<span class="kw">use </span>clap::{Arg, Command};
+<span class="kw">use </span>clap::error::ErrorKind;
+<span class="kw">use </span>rustc_tools_util::VersionInfo;
+
+
+<span class="kw">use </span><span class="kw">crate</span>::pta::PTAType;
+
+<span class="kw">const </span>RUPTA_USAGE: <span class="kw-2">&amp;</span>str = <span class="string">r#"pta [OPTIONS] INPUT -- [RUSTC OPTIONS]"#</span>;
+
+<span class="doccomment">/// version information from Cargo.toml
+</span><span class="kw">fn </span>version() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+    <span class="kw">let </span>version_info = <span class="macro">rustc_tools_util::get_version_info!</span>();
+    <span class="kw">let </span>version = <span class="macro">format!</span>(<span class="string">"v{}.{}.{}"</span>, version_info.major, version_info.minor, version_info.patch);
+    Box::leak(version.into_boxed_str())
+}
+
+<span class="doccomment">/// Creates the clap::Command metadata for argument parsing.
+</span><span class="kw">fn </span>make_options_parser() -&gt; Command&lt;<span class="lifetime">'static</span>&gt; {
+    <span class="comment">// We could put this into lazy_static! with a Mutex around, but we really do not expect
+    // to construct this more then once per regular program run.
+    </span><span class="kw">let </span>parser = Command::new(<span class="string">"rupta"</span>)
+        .no_binary_name(<span class="bool-val">true</span>)
+        .override_usage(RUPTA_USAGE)
+        .version(version())
+        .arg(Arg::new(<span class="string">"entry-func-name"</span>)
+            .long(<span class="string">"entry-func"</span>)
+            .takes_value(<span class="bool-val">true</span>) 
+            .help(<span class="string">"The name of entry function from which the pointer analysis begins."</span>))
+        .arg(Arg::new(<span class="string">"entry-func-id"</span>)
+            .long(<span class="string">"entry-id"</span>)
+            .takes_value(<span class="bool-val">true</span>)
+            .value_parser(<span class="macro">clap::value_parser!</span>(u32))
+            .help(<span class="string">"The def_id of entry function from which the pointer analysis begins."</span>))
+        .arg(Arg::new(<span class="string">"pta-type"</span>)
+            .long(<span class="string">"pta-type"</span>)
+            .takes_value(<span class="bool-val">true</span>)
+            .value_parser([<span class="string">"andersen"</span>, <span class="string">"ander"</span>, <span class="string">"callsite-sensitive"</span>, <span class="string">"cs"</span>])
+            .default_value(<span class="string">"callsite-sensitive"</span>)
+            .help(<span class="string">"The type of pointer analysis."</span>)
+            .long_help(<span class="string">"Andersen and callsite-sensitive pointer analyses are supported now."</span>))
+        .arg(Arg::new(<span class="string">"context-depth"</span>)
+            .long(<span class="string">"context-depth"</span>)
+            .takes_value(<span class="bool-val">true</span>)
+            .value_parser(<span class="macro">clap::value_parser!</span>(u32))
+            .default_value(<span class="string">"1"</span>)
+            .help(<span class="string">"The context depth limit for a context-sensitive pointer analysis."</span>))
+        .arg(Arg::new(<span class="string">"no-cast-constraint"</span>)
+            .long(<span class="string">"no-cast-constraint"</span>)
+            .takes_value(<span class="bool-val">false</span>)
+            .hide(<span class="bool-val">true</span>)
+            .help(<span class="string">"Disable the cast optimization that constrains an object cast from a simple pointer type."</span>))
+        .arg(Arg::new(<span class="string">"dump-stats"</span>)
+            .long(<span class="string">"dump-stats"</span>)
+            .takes_value(<span class="bool-val">false</span>)
+            .help(<span class="string">"Dump the statistics of the analysis results."</span>))
+        .arg(Arg::new(<span class="string">"call-graph-output"</span>)
+            .long(<span class="string">"dump-call-graph"</span>)
+            .takes_value(<span class="bool-val">true</span>)
+            .help(<span class="string">"Dump the call graph in DOT format to the output file."</span>))
+        .arg(Arg::new(<span class="string">"pts-output"</span>)
+            .long(<span class="string">"dump-pts"</span>)
+            .takes_value(<span class="bool-val">true</span>)
+            .help(<span class="string">"Dump points-to results to the output file."</span>))
+        .arg(Arg::new(<span class="string">"mir-output"</span>)
+            .long(<span class="string">"dump-mir"</span>)
+            .takes_value(<span class="bool-val">true</span>)
+            .help(<span class="string">"Dump the mir of reachable functions to the output file."</span>))
+        .arg(Arg::new(<span class="string">"unsafe-stats-output"</span>)
+            .long(<span class="string">"dump-unsafe-stats"</span>)
+            .takes_value(<span class="bool-val">true</span>)
+            .help(<span class="string">"Dump the statistics of unsafe functions in the analyzed program."</span>))
+        .arg(Arg::new(<span class="string">"dyn-calls-output"</span>)
+            .long(<span class="string">"dump-dyn-calls"</span>)
+            .takes_value(<span class="bool-val">true</span>)
+            .hide(<span class="bool-val">true</span>)
+            .hide(<span class="bool-val">true</span>)
+            .help(<span class="string">"Dump resolved dynamic callsites with their corresponding call targets."</span>)
+            .long_help(<span class="string">"Including both calls on dynamic trait objects and calls via function pointers"</span>))
+        .arg(Arg::new(<span class="string">"type-indices-output"</span>)
+            .long(<span class="string">"dump-type-indices"</span>)
+            .takes_value(<span class="bool-val">true</span>)
+            .hide(<span class="bool-val">true</span>)
+            .help(<span class="string">"Dump type indices for debugging."</span>))
+        .arg(Arg::new(<span class="string">"INPUT"</span>)
+            .multiple(<span class="bool-val">true</span>)
+            .help(<span class="string">"The input file to be analyzed."</span>)
+        );
+    parser
+}
+
+<span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>AnalysisOptions {
+    <span class="kw">pub </span>entry_func: String,
+    <span class="kw">pub </span>entry_def_id: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+    <span class="kw">pub </span>pta_type: PTAType,
+    <span class="comment">// options for context-sensitive analysis
+    </span><span class="kw">pub </span>context_depth: u32,
+    <span class="comment">// options for handling cast propagation
+    </span><span class="kw">pub </span>cast_constraint: bool,
+    
+    <span class="kw">pub </span>dump_stats: bool,
+    <span class="kw">pub </span>call_graph_output: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>pts_output: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>mir_output: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>type_indices_output: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>dyn_calls_output: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>unsafe_stat_output: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>func_ctxts_output: <span class="prelude-ty">Option</span>&lt;String&gt;, 
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>AnalysisOptions {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            entry_func: String::new(),
+            entry_def_id: <span class="prelude-val">None</span>,
+            pta_type: PTAType::CallSiteSensitive,
+            context_depth: <span class="number">1</span>,
+            cast_constraint: <span class="bool-val">true</span>,
+            dump_stats: <span class="bool-val">true</span>,
+            call_graph_output: <span class="prelude-val">None</span>,
+            pts_output: <span class="prelude-val">None</span>,
+            mir_output: <span class="prelude-val">None</span>,
+            type_indices_output: <span class="prelude-val">None</span>,
+            dyn_calls_output: <span class="prelude-val">None</span>,
+            unsafe_stat_output: <span class="prelude-val">None</span>,
+            func_ctxts_output: <span class="prelude-val">None</span>,
+        }
+    }
+}
+
+<span class="kw">impl </span>AnalysisOptions {
+    <span class="doccomment">/// Parses options from a list of strings. Any content beyond the leftmost `--` token
+    /// will be returned (excluding this token).
+    </span><span class="kw">pub fn </span>parse_from_args(<span class="kw-2">&amp;mut </span><span class="self">self</span>, args: <span class="kw-2">&amp;</span>[String], from_env: bool) -&gt; Vec&lt;String&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>pta_args_end = args.len();
+        <span class="kw">let </span><span class="kw-2">mut </span>rustc_args_start = <span class="number">0</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((p, <span class="kw">_</span>)) = args.iter().find_position(|s| s.as_str() == <span class="string">"--"</span>) {
+            pta_args_end = p;
+            rustc_args_start = p + <span class="number">1</span>;
+        }
+        <span class="kw">let </span>pta_args = <span class="kw-2">&amp;</span>args[<span class="number">0</span>..pta_args_end];
+        <span class="kw">let </span>matches = <span class="kw">if </span>!from_env &amp;&amp; rustc_args_start == <span class="number">0 </span>{
+            <span class="comment">// The arguments may not be intended for RUPTA and may get here via some tool, so do not 
+            // report errors here, but just assume that the arguments were not meant for RUPTA.
+            </span><span class="kw">match </span>make_options_parser().try_get_matches_from(pta_args.iter())
+            {
+                <span class="prelude-val">Ok</span>(matches) =&gt; {
+                    <span class="comment">// Looks like these are RUPTA options after all and there are no rustc options.
+                    </span>rustc_args_start = args.len();
+                    matches
+                }
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">match </span>e.kind() {
+                    ErrorKind::DisplayHelp =&gt; {
+                        <span class="macro">eprintln!</span>(<span class="string">"{e}"</span>);
+                        <span class="kw">return </span>args.to_vec();
+                    }
+                    ErrorKind::UnknownArgument =&gt; {
+                        <span class="comment">// Just send all of the arguments to rustc.
+                        // Note that this means that RUPTA options and rustc options must always
+                        // be separated by --. I.e. any RUPTA options present in arguments list
+                        // will stay unknown to RUPTA and will make rustc unhappy.
+                        </span><span class="kw">return </span>args.to_vec();
+                    }
+                    <span class="kw">_ </span>=&gt; {
+                        e.exit();
+                    }
+                },
+            }
+        } <span class="kw">else </span>{
+            <span class="comment">// This will display error diagnostics for arguments that are not valid for RUPTA.
+            </span><span class="kw">match </span>make_options_parser().try_get_matches_from(pta_args.iter()) {
+                <span class="prelude-val">Ok</span>(matches) =&gt; {
+                    <span class="kw">if </span>rustc_args_start == <span class="number">0 </span>{
+                        rustc_args_start = args.len();
+                    }
+                    matches
+                }
+                <span class="prelude-val">Err</span>(e) =&gt; {
+                    e.exit();
+                }
+            }
+        };
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(s) = matches.get_one::&lt;String&gt;(<span class="string">"entry-func-name"</span>) {
+            <span class="self">self</span>.entry_func = s.clone();
+        }
+        <span class="self">self</span>.entry_def_id = matches.get_one::&lt;u32&gt;(<span class="string">"entry-func-id"</span>).cloned();
+
+        <span class="kw">if </span>matches.contains_id(<span class="string">"pta-type"</span>) {
+            <span class="self">self</span>.pta_type = <span class="kw">match </span>matches.get_one::&lt;String&gt;(<span class="string">"pta-type"</span>).unwrap().as_str() {
+                <span class="string">"andersen" </span>| <span class="string">"ander" </span>=&gt; PTAType::Andersen,
+                <span class="string">"callsite-sensitive" </span>| <span class="string">"cs" </span>=&gt; PTAType::CallSiteSensitive,
+                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+            }
+        }
+        
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(depth) = matches.get_one::&lt;u32&gt;(<span class="string">"context-depth"</span>) {
+            <span class="self">self</span>.context_depth = <span class="kw-2">*</span>depth;
+        }
+
+        <span class="self">self</span>.cast_constraint = !matches.contains_id(<span class="string">"no-cast-constraint"</span>);
+        
+        <span class="self">self</span>.dump_stats = matches.contains_id(<span class="string">"dump-stats"</span>);
+        <span class="self">self</span>.call_graph_output = matches.get_one::&lt;String&gt;(<span class="string">"call-graph-output"</span>).cloned();
+        <span class="self">self</span>.pts_output = matches.get_one::&lt;String&gt;(<span class="string">"pts-output"</span>).cloned();
+        <span class="self">self</span>.mir_output = matches.get_one::&lt;String&gt;(<span class="string">"mir-output"</span>).cloned();
+        <span class="self">self</span>.unsafe_stat_output = matches.get_one::&lt;String&gt;(<span class="string">"unsafe-stats-output"</span>).cloned();
+        <span class="self">self</span>.dyn_calls_output = matches.get_one::&lt;String&gt;(<span class="string">"dyn-calls-output"</span>).cloned();
+        <span class="self">self</span>.type_indices_output = matches.get_one::&lt;String&gt;(<span class="string">"type-indices-output"</span>).cloned();
+
+        <span class="comment">// If the user provide the input source code file path before the `--` token, 
+        // add it to the rustc arguments.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>rustc_args = args[rustc_args_start..].to_vec();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(input) = matches.get_many::&lt;String&gt;(<span class="string">"INPUT"</span>) {
+            rustc_args.extend(input.cloned())
+        } 
+        
+        rustc_args
+    }
+
+}
+</code></pre></div></section></main></body></html>
