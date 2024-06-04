@@ -437,7 +437,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::util::{<span class="self">self</span>, chunked_queue, results_dumper};
 
 <span class="kw">pub type </span>CallSiteSensitivePTA&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>&gt; = ContextSensitivePTA&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>, KCallSiteSensitive&gt;;
-<span class="kw">pub type </span>ObjectSensitivePTA&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>&gt; = ContextSensitivePTA&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>, KObjectSensitive&gt;;
+<span class="doccomment">/// The object-sensitive pointer analysis for Rust has not been throughly evaluated so far.
+</span><span class="kw">pub type </span>ObjectSensitivePTA&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>&gt; = ContextSensitivePTA&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>, KObjectSensitive&gt;;
 
 <span class="kw">pub struct </span>ContextSensitivePTA&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>, S: ContextStrategy&gt; {
     <span class="doccomment">/// The analysis context
@@ -514,7 +515,7 @@
         <span class="self">self</span>.ctx_strategy.get_empty_context_id()
     }
 
-    <span class="doccomment">/// Initialize analysis
+    <span class="doccomment">/// Initialize the analysis.
     </span><span class="kw">pub fn </span>initialize(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="comment">// add the entry point to the call graph
         </span><span class="kw">let </span>entry_point = <span class="self">self</span>.acx.entry_point;
@@ -526,7 +527,7 @@
         </span><span class="self">self</span>.process_reach_funcs();
     }
 
-    <span class="doccomment">/// Solve the worklist problem by using Propagator
+    <span class="doccomment">/// Solve the worklist problem using Propagator.
     </span><span class="kw">pub fn </span>propagate(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">let </span><span class="kw-2">mut </span>iter_proc_edge_iter = <span class="self">self</span>.inter_proc_edges_queue.iter_copied();
         <span class="comment">// Solve until no new call relationship is found.
@@ -555,7 +556,7 @@
     }
 
     
-    <span class="doccomment">/// Process statements of reachable functions.
+    <span class="doccomment">/// Process statements in reachable functions.
     </span><span class="kw">fn </span>process_reach_funcs(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">while let </span><span class="prelude-val">Some</span>(func) = <span class="self">self</span>.rf_iter.next() {
             <span class="kw">if </span>!<span class="self">self</span>.processed_funcs.contains(<span class="kw-2">&amp;</span>func) {
@@ -574,7 +575,7 @@
         }
     }
 
-    <span class="doccomment">/// Adds internal edges of a function pag to pag.
+    <span class="doccomment">/// Adds internal edges of a function pag to the whole program's pag.
     /// The function pag for the given def_id should be built before calling this function.
     </span><span class="kw">pub fn </span>add_fpag_edges(<span class="kw-2">&amp;mut </span><span class="self">self</span>, func: CSFuncId) {
         <span class="kw">if </span><span class="self">self</span>.processed_funcs.contains(<span class="kw-2">&amp;</span>func) {
@@ -768,13 +769,12 @@
         ))
     }
 
-    <span class="comment">// Get points-to data
-    </span><span class="attr">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">pub fn </span>get_pt_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>DiffPTDataTy {
         <span class="kw-2">&amp;</span><span class="self">self</span>.pt_data
     }
 
-    <span class="doccomment">/// Finalize analysis
+    <span class="doccomment">/// Finalize the analysis.
     </span><span class="kw">pub fn </span>finalize(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="comment">// dump call graph, points-to results
         </span>results_dumper::dump_results(<span class="self">self</span>.acx, <span class="kw-2">&amp;</span><span class="self">self</span>.call_graph, <span class="kw-2">&amp;</span><span class="self">self</span>.pt_data, <span class="kw-2">&amp;</span><span class="self">self</span>.pag);

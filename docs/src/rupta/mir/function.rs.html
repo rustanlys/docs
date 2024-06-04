@@ -132,7 +132,6 @@
 <a href="#130" id="130">130</a>
 <a href="#131" id="131">131</a>
 <a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
@@ -148,13 +147,13 @@
 
 <span class="macro">rustc_index::newtype_index! </span>{
     <span class="doccomment">/// The unique identifier for each function reference.
-    /// Every unique instantiation of a generic function will have a different function_id but the same def_id.
+    /// Every unique instantiation of a generic function will have a different func_id.
     </span><span class="attr">#[orderable]
     #[debug_format = <span class="string">"FuncId({})"</span>]
     </span><span class="kw">pub struct </span>FuncId {}
 }
 
-<span class="doccomment">/// Context-sensitive function consisting of a context_id (cid) and a function id (func_id). 
+<span class="doccomment">/// Context-sensitive function consisting of a context id (cid) and a function id (func_id). 
 </span><span class="attr">#[derive(Copy, Clone, Debug, Eq, PartialOrd, PartialEq, Hash, Ord)]
 </span><span class="kw">pub struct </span>CSFuncId {
     <span class="kw">pub </span>cid: ContextId,
@@ -187,8 +186,7 @@
     </span><span class="kw">pub </span>promoted: <span class="prelude-ty">Option</span>&lt;Promoted&gt;,
 }
 
-<span class="doccomment">/// We cannot implement the Clone and Hash trait for GenericArgKind,
-/// therefore we provide a similar enum type as GenericArgKind
+<span class="doccomment">/// Resembles the `GenericArgKind` type in rustc.
 </span><span class="attr">#[derive(Clone, Debug, Eq, PartialOrd, PartialEq, Hash, Ord)]
 </span><span class="kw">pub enum </span>GenericArgE&lt;<span class="lifetime">'tcx</span>&gt; {
     Region,

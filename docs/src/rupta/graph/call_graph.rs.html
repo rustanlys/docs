@@ -226,6 +226,9 @@
 <a href="#224" id="224">224</a>
 <a href="#225" id="225">225</a>
 <a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
@@ -244,10 +247,12 @@
 <span class="kw">use </span><span class="kw">crate</span>::util::chunked_queue::{<span class="self">self</span>, ChunkedQueue};
 <span class="kw">use </span><span class="kw">crate</span>::util::dot::Dot;
 
-<span class="comment">// Unique identifiers for graph node and edges.
+<span class="doccomment">/// Unique identifiers for call graph nodes.
 </span><span class="kw">pub type </span>CGNodeId = NodeIndex&lt;DefaultIx&gt;;
-<span class="kw">pub type </span>CGEdgeId = EdgeIndex&lt;DefaultIx&gt;;
-<span class="kw">pub type </span>CSCallGraph = CallGraph&lt;CSFuncId, CSBaseCallSite&gt;;
+<span class="doccomment">/// Unique identifiers for call graph edges.
+</span><span class="kw">pub type </span>CGEdgeId = EdgeIndex&lt;DefaultIx&gt;;
+<span class="comment">// Context-sensitive call graph.
+</span><span class="kw">pub type </span>CSCallGraph = CallGraph&lt;CSFuncId, CSBaseCallSite&gt;;
 
 
 <span class="kw">pub trait </span>CGFunction: Copy + Clone + PartialEq + Eq + Hash + Debug {
@@ -311,14 +316,15 @@
 }
 
 <span class="kw">pub struct </span>CallGraph&lt;F: CGFunction, S: CGCallSite&gt; {
-    <span class="doccomment">/// The graph structure capturing calls between nodes
+    <span class="doccomment">/// The graph structure capturing call relationships.
     </span><span class="kw">pub </span>graph: Graph&lt;CallGraphNode&lt;F&gt;, CallGraphEdge&lt;S&gt;&gt;,
-    <span class="doccomment">/// A map from function value to call graph node id
+    <span class="doccomment">/// A map from functions to their corresponding call graph nodes.
     </span><span class="kw">pub </span>func_nodes: HashMap&lt;F, CGNodeId&gt;,
-    <span class="doccomment">/// A map from call sites to call graph edges
+    <span class="doccomment">/// A map from call sites to call graph edges.
     </span><span class="kw">pub </span>callsite_to_edges: HashMap&lt;S, HashSet&lt;CGEdgeId&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) callsite_to_type: HashMap&lt;BaseCallSite, CallType&gt;,
-    <span class="doccomment">/// A queue of reachable ndoes
+    <span class="doccomment">/// Record the type of each call.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) callsite_to_type: HashMap&lt;BaseCallSite, CallType&gt;,
+    <span class="doccomment">/// A queue of reachable ndoes.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) reach_funcs: ChunkedQueue&lt;F&gt;,
 }
 
@@ -379,7 +385,7 @@
         <span class="self">self</span>.graph.edge_endpoints(edge_id)
     }
 
-    <span class="doccomment">/// Get the callees set for a callsite
+    <span class="doccomment">/// Get the set of callees for a callsite.
     </span><span class="kw">pub fn </span>get_callees(<span class="kw-2">&amp;</span><span class="self">self</span>, callsite: <span class="kw-2">&amp;</span>S) -&gt; HashSet&lt;F&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(edges) = <span class="self">self</span>.callsite_to_edges.get(callsite) {
             edges
@@ -394,7 +400,7 @@
         }
     }
 
-    <span class="doccomment">/// Returns false if the edge from callsite to callee already existed, and true otherwise.
+    <span class="doccomment">/// Returns true if an edge to the callee already existed for the callsite.
     </span><span class="kw">pub fn </span>has_edge(<span class="kw-2">&amp;</span><span class="self">self</span>, callsite: <span class="kw-2">&amp;</span>S, callee_id: F) -&gt; bool {
         <span class="kw">let </span>callees = <span class="self">self</span>.get_callees(callsite);
         callees.contains(<span class="kw-2">&amp;</span>callee_id)

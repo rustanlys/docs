@@ -544,10 +544,13 @@
 <a href="#542" id="542">542</a>
 <a href="#543" id="543">543</a>
 <a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
 // LICENSE file in the root directory of this source tree.
+
+</span><span class="doccomment">//! Provides special handling for a set of functions.
 
 </span><span class="kw">use </span>lazy_static::lazy_static;
 <span class="kw">use </span>log::<span class="kw-2">*</span>;
@@ -624,13 +627,16 @@
     };
 }
 
-<span class="kw">pub fn </span>is_specially_handled_function(acx: <span class="kw-2">&amp;mut </span>AnalysisContext, def_id: DefId) -&gt; bool {
+<span class="doccomment">/// Returns true if the function with `def_id` is specially handled.
+</span><span class="kw">pub fn </span>is_specially_handled_function(acx: <span class="kw-2">&amp;mut </span>AnalysisContext, def_id: DefId) -&gt; bool {
     <span class="kw">let </span>known_name = acx.get_known_name_for(def_id);
     SPECIALLY_HANDLED_FUNCTIONS.contains(<span class="kw-2">&amp;</span>known_name)
 }
 
-
-<span class="comment">// Returns true if this callee function is handled as a special function.
+<span class="doccomment">/// Handling calls to special functions.
+/// 
+/// Returns true if this callee function is handled as a special function.
+/// If the return result is false, we need to continue with the normal logic.
 </span><span class="kw">pub fn </span>handled_as_special_function_call&lt;<span class="lifetime">'tcx</span>&gt;(
     fpb: <span class="kw-2">&amp;mut </span>FuncPAGBuilder&lt;<span class="lifetime">'_</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'_</span>&gt;,
     callee_def_id: <span class="kw-2">&amp;</span>DefId,
@@ -703,8 +709,7 @@
             <span class="kw">let </span>tcx = fpb.acx.tcx;
             <span class="kw">let </span>generic_types = gen_args.into_type_list(tcx);
             <span class="macro">assert!</span>(generic_types.len() &gt;= <span class="number">2</span>);
-            <span class="comment">// format!("{:?}", gen_args) == "[std::ptr::Unique&lt;u8&gt;, std::ptr::NonNull&lt;u8&gt;]"  
-            </span><span class="kw">if </span>is_std_ptr_unique(tcx, generic_types[<span class="number">0</span>]) &amp;&amp; is_std_ptr_nonnull(tcx, generic_types[<span class="number">1</span>]) {
+            <span class="kw">if </span>is_std_ptr_unique(tcx, generic_types[<span class="number">0</span>]) &amp;&amp; is_std_ptr_nonnull(tcx, generic_types[<span class="number">1</span>]) {
                 handle_unique_into_nonnull(fpb, args, destination);
                 <span class="kw">return </span><span class="bool-val">true</span>;
             }
@@ -717,13 +722,13 @@
 }
 
 
-<span class="kw">fn </span>handle_transmute&lt;<span class="lifetime">'tcx</span>&gt;(
+<span class="doccomment">/// Handles the call to the intrinsics `Transmute` function.
+</span><span class="kw">fn </span>handle_transmute&lt;<span class="lifetime">'tcx</span>&gt;(
     fpb: <span class="kw-2">&amp;mut </span>FuncPAGBuilder&lt;<span class="lifetime">'_</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'_</span>&gt;,
     gen_args: <span class="kw-2">&amp;</span>GenericArgsRef&lt;<span class="lifetime">'tcx</span>&gt;,
     args: <span class="kw-2">&amp;</span>Vec&lt;Rc&lt;Path&gt;&gt;,
     destination: <span class="kw-2">&amp;</span>Rc&lt;Path&gt;,
 ) {
-    <span class="macro">debug!</span>(<span class="string">"Transmuting from {:?} to {:?}"</span>, args[<span class="number">0</span>], destination);
     <span class="kw">let </span>source_path = args[<span class="number">0</span>].clone();
     <span class="kw">let </span>source_rustc_type = gen_args.get(<span class="number">0</span>).expect(<span class="string">"rustc type error"</span>).expect_ty();
     <span class="kw">let </span>target_path = destination.clone();
@@ -735,9 +740,9 @@
 }
 
 
-<span class="doccomment">/// `std::ptr::mut_ptr::offset(_1: *mut T, _2: isize)`
-/// Returns the address computed from the based address and the offset.
-/// Commonly used when vector read write operations.
+<span class="doccomment">/// Handles the call to the `offset` function, such as `std::ptr::mut_ptr::offset(_1: *mut T, _2: isize)`.
+/// The offset function returns the address computed from the based address and the offset, and is commonly 
+/// used in vector's read/write operations.
 </span><span class="kw">fn </span>handle_offset&lt;<span class="lifetime">'tcx</span>&gt;(
     fpb: <span class="kw-2">&amp;mut </span>FuncPAGBuilder&lt;<span class="lifetime">'_</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'_</span>&gt;,
     args: <span class="kw-2">&amp;</span>Vec&lt;Rc&lt;Path&gt;&gt;,
@@ -748,10 +753,10 @@
     fpb.add_offset_edge(source_path, destination.clone());
 }
 
-<span class="doccomment">/// `core::ptr::const_ptr::cast()` and `core::ptr::mut_ptr::cast()`
-/// Casts to a pointer of another type.
+<span class="doccomment">/// `core::ptr::const_ptr::cast()` and `core::ptr::mut_ptr::cast()`.
+/// 
 /// The cast functions significantly impacts the analysis precision and efficiency 
-/// when analyzed context insensitively 
+/// when analyzed context-insensitively.
 </span><span class="kw">fn </span>handle_ptr_cast&lt;<span class="lifetime">'tcx</span>&gt;(
     fpb: <span class="kw-2">&amp;mut </span>FuncPAGBuilder&lt;<span class="lifetime">'_</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'_</span>&gt;,
     args: <span class="kw-2">&amp;</span>Vec&lt;Rc&lt;Path&gt;&gt;,
@@ -763,8 +768,8 @@
 }
 
 
-<span class="doccomment">/// `fn allocate_in(capacity: usize, init: AllocInit, alloc: A) -&gt; Self`
-/// RawVec&lt;T, A: Allocator = Global&gt; { ptr: Unique&lt;T&gt;, cap: usize, alloc: A, }
+<span class="doccomment">/// ```fn allocate_in(capacity: usize, init: AllocInit, alloc: A) -&gt; Self```.
+/// ```RawVec&lt;T, A: Allocator = Global&gt; { ptr: Unique&lt;T&gt;, cap: usize, alloc: A, }```
 </span><span class="kw">fn </span>handle_raw_vec_allocate_in&lt;<span class="lifetime">'tcx</span>&gt;(
     fpb: <span class="kw-2">&amp;mut </span>FuncPAGBuilder&lt;<span class="lifetime">'_</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'_</span>&gt;,
     gen_args: <span class="kw-2">&amp;</span>GenericArgsRef&lt;<span class="lifetime">'tcx</span>&gt;,
@@ -810,7 +815,7 @@
 }
 
 
-<span class="doccomment">/// fn spawn_unchecked&lt;'a, F, T&gt;(self, f: F) -&gt; io::Result&lt;JoinHandle&lt;T&gt;&gt;
+<span class="doccomment">/// ```fn spawn_unchecked&lt;'a, F, T&gt;(self, f: F) -&gt; io::Result&lt;JoinHandle&lt;T&gt;&gt;```.
 /// This function starts a new thread by calling external C function.
 /// Instead of calling this function, we indirect the call to the thread closure f.
 /// We can call `inline_indirectly_called_function` in fpb directly to resolve this call.
@@ -838,7 +843,7 @@
         new_location,
     );
 
-    <span class="comment">// Todo: Add edges from aux_dst to destination, to do so, we need to allocate a heap memory for the packet field.
+    <span class="comment">// Todo: Add edges from `aux_dst` to `destination`, to do so, we need to allocate a heap memory for the packet field.
     // Destination type: io::Result&lt;JoinHandle&lt;T&gt;&gt;, where struct JoinHandle&lt;T&gt;(JoinInner&lt;'static, T&gt;);
     // struct JoinInner&lt;'scope, T&gt; {
     //     native: imp::Thread,
@@ -865,7 +870,7 @@
     fpb.add_direct_edge(field_path, destination.clone());
 }
 
-<span class="doccomment">/// fn std::ptr::Unique::&lt;T&gt;::new_unchecked(_1: *mut T) -&gt; std::ptr::Unique&lt;T&gt;
+<span class="doccomment">/// ```fn std::ptr::Unique::&lt;T&gt;::new_unchecked(_1: *mut T) -&gt; std::ptr::Unique&lt;T&gt;```
 </span><span class="kw">fn </span>handle_unique_new_unchecked&lt;<span class="lifetime">'tcx</span>&gt;(
     fpb: <span class="kw-2">&amp;mut </span>FuncPAGBuilder&lt;<span class="lifetime">'_</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'_</span>&gt;,
     args: <span class="kw-2">&amp;</span>Vec&lt;Rc&lt;Path&gt;&gt;,
@@ -879,13 +884,10 @@
     fpb.add_direct_edge(args[<span class="number">0</span>].clone(), dst_field_path);
 }
 
-<span class="doccomment">/// fn std::result::Result::&lt;T, E&gt;::map_err(_1: std::result::Result&lt;T, E&gt;, _2: O) -&gt; std::result::Result&lt;T, F&gt;
-/// enum Result&lt;T, E&gt; {
-///    Ok(T),
-///    Err(E),
-/// }
-/// path.as_variant#0.0: T
-/// Handling as assignment from `param_1.as_variant#0.0` to `ret.as_variant#0.0` 
+<span class="doccomment">/// ```fn std::result::Result::&lt;T, E&gt;::map_err(_1: std::result::Result&lt;T, E&gt;, _2: O) 
+///    -&gt; std::result::Result&lt;T, F&gt;
+/// ```
+/// Handles as an assignment from `param_1.as_variant#0.0` to `ret.as_variant#0.0`.
 </span><span class="kw">fn </span>handle_result_map_err&lt;<span class="lifetime">'tcx</span>&gt;(
     fpb: <span class="kw-2">&amp;mut </span>FuncPAGBuilder&lt;<span class="lifetime">'_</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'_</span>&gt;,
     gen_args: <span class="kw-2">&amp;</span>GenericArgsRef&lt;<span class="lifetime">'tcx</span>&gt;,
@@ -1023,7 +1025,7 @@
             </span>fpb.add_direct_edge(args[<span class="number">0</span>].clone(), destination.clone());
             <span class="bool-val">true
         </span>}
-        <span class="comment">// Reallocates memory on the heap and returns a result of Result&lt;NonNull&lt;[u8]&gt;, AllocError&gt; type.
+        <span class="comment">// Reallocates memory on the heap and returns a result of `Result&lt;NonNull&lt;[u8]&gt;, AllocError&gt;` type.
         </span>KnownNames::StdAllocAllocatorGrow
         | KnownNames::StdAllocAllocatorGrowZeroed
         | KnownNames::StdAllocAllocatorShrink =&gt; {

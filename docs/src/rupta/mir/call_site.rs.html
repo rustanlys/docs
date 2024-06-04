@@ -208,6 +208,8 @@
 <a href="#206" id="206">206</a>
 <a href="#207" id="207">207</a>
 <a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
@@ -225,15 +227,15 @@
 
 
 <span class="attr">#[derive(Clone, PartialEq, Eq, Hash, Debug)]
-</span><span class="doccomment">/// The type of a call graph edge
+</span><span class="doccomment">/// The type of a call graph edge.
 </span><span class="kw">pub enum </span>CallType {
-    <span class="comment">// Calls resolved by static dispatch, including static Fn* trait calls
+    <span class="comment">// Calls resolved via static dispatch, including static Fn* trait calls.
     </span>StaticDispatch,
-    <span class="comment">// Calls resolved by dynamic dispatch, excluding dynamic Fn* trait calls
+    <span class="comment">// Calls resolved via dynamic dispatch, excluding dynamic Fn* trait calls.
     </span>DynamicDispatch,
-    <span class="comment">// Fn* trait calls resolved by dynamic dispatch
+    <span class="comment">// Fn* trait calls resolved via dynamic dispatch.
     </span>DynamicFnTrait,
-    <span class="comment">// function pointer calls
+    <span class="comment">// function pointer calls.
     </span>FnPtr,
 }
 
@@ -244,7 +246,8 @@
 
 <span class="kw">pub type </span>CalleeIdentifier&lt;<span class="lifetime">'tcx</span>&gt; = (DefId, GenericArgsRef&lt;<span class="lifetime">'tcx</span>&gt;);
 
-<span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+<span class="doccomment">/// A base callsite, consisting of the basic information, i.e. the call's location in the code. 
+</span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 </span><span class="kw">pub struct </span>BaseCallSiteS&lt;F&gt; {
     <span class="kw">pub </span>func: F,
     <span class="kw">pub </span>location: Location,
@@ -256,7 +259,8 @@
     }
 }
 
-<span class="attr">#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+<span class="doccomment">/// A callsite, consisting of the call's location, the arguments and the destination. 
+</span><span class="attr">#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 </span><span class="kw">pub struct </span>CallSiteS&lt;F, P&gt; {
     <span class="kw">pub </span>func: F,
     <span class="kw">pub </span>location: Location,
@@ -275,8 +279,8 @@
     }
 }
 
-
-<span class="attr">#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+<span class="doccomment">/// A detailed callsite, including information of callee's def_id and generic args.
+</span><span class="attr">#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 </span><span class="kw">pub struct </span>ExtCallSiteS&lt;<span class="lifetime">'tcx</span>, F, P&gt; {
     <span class="kw">pub </span>callsite: Rc&lt;CallSiteS&lt;F, P&gt;&gt;,
     <span class="kw">pub </span>callee_def_id: DefId,
@@ -348,7 +352,7 @@
     }
 }
 
-<span class="doccomment">/// Function calls associated with an instance, a dynamic object or a function pointer 
+<span class="doccomment">/// Function calls associated with an instance, a dynamic object or a function pointer.
 </span><span class="kw">pub struct </span>AssocCallGroup&lt;I, F, P&gt; {
     <span class="comment">// Pairs of the self pointer and the associated function callsites that can be statically dispatched.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) static_dispatch_instance_calls: HashMap&lt;I, HashSet&lt;(Rc&lt;CallSiteS&lt;F, P&gt;&gt;, FuncId)&gt;&gt;,

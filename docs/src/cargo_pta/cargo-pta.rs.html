@@ -303,10 +303,23 @@
 <a href="#301" id="301">301</a>
 <a href="#302" id="302">302</a>
 <a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
 // LICENSE file in the root directory of this source tree.
+
+</span><span class="doccomment">//! This provides an implementation for the "cargo pta" subcommand.
+//! 
+//! The subcommand is the same as "cargo check" but with three differences:
+//! 1) It implicitly adds the options "-Z always_encode_mir" to the rustc invocation.
+//! 2) It calls `pta` rather than `rustc` for all the targets of the current package.
+//! 3) It runs `cargo test --no-run` for test targets.
 
 </span><span class="kw">use </span>cargo_metadata::Package;
 <span class="kw">use </span>log::info;
@@ -320,10 +333,14 @@
 
 <span class="kw">use </span>rupta::util;
 
-<span class="kw">const </span>CARGO_PTA_HELP: <span class="kw-2">&amp;</span>str = <span class="string">r#"Pointer analysis tool for Rust programs
+<span class="doccomment">/// The help message for `cargo-pta`
+</span><span class="kw">const </span>CARGO_PTA_HELP: <span class="kw-2">&amp;</span>str = <span class="string">r#"Pointer analysis tool for Rust programs
 Usage:
     cargo pta
 "#</span>;
+
+<span class="doccomment">/// Set the environment variable `PTA_BUILD_STD` to enable the building of std library when running pta.
+</span><span class="kw">const </span>PTA_BUILD_STD: <span class="kw-2">&amp;</span>str = <span class="string">"PTA_BUILD_STD"</span>;
 
 <span class="kw">pub fn </span>main() {
     <span class="kw">if </span>std::env::args().take_while(|a| a != <span class="string">"--"</span>).any(|a| a == <span class="string">"--help" </span>|| a == <span class="string">"-h"</span>) {
@@ -431,17 +448,12 @@ Usage:
         <span class="kw">if </span>arg == <span class="string">"--" </span>{
             <span class="kw">break</span>;
         }
-        <span class="kw">if </span>arg == <span class="string">"--no-std-build" </span>{
-            <span class="kw">continue</span>;
-        }
         cmd.arg(arg);
     }
 
     <span class="comment">// Enable Cargo to compile the standard library from source code as part of a crate graph compilation.
-    </span><span class="kw">if </span>!has_arg_flag(<span class="string">"-Zbuild-std"</span>) &amp;&amp; !has_arg_flag(<span class="string">"build-std"</span>) {
-        <span class="kw">if </span>!has_arg_flag(<span class="string">"--no-std-build"</span>) {
-            cmd.arg(<span class="string">"-Zbuild-std"</span>);
-        }
+    </span><span class="kw">if </span>env::var(PTA_BUILD_STD).is_ok() {
+        cmd.arg(<span class="string">"-Zbuild-std"</span>);
 
         <span class="kw">if </span>!has_arg_flag(<span class="string">"--target"</span>) {
             <span class="kw">let </span>toolchain_target = toolchain_target().expect(<span class="string">"could not get toolchain target"</span>);
@@ -549,15 +561,15 @@ Usage:
     }
 }
 
-<span class="comment">// Determines whether a flag `name` is present before `--`.
-// For example, has_arg_flag("-v")
+<span class="doccomment">/// Determines whether a flag `name` is present before `--`.
+/// For example, has_arg_flag("-v")
 </span><span class="kw">fn </span>has_arg_flag(name: <span class="kw-2">&amp;</span>str) -&gt; bool {
     <span class="kw">let </span><span class="kw-2">mut </span>args = std::env::args().take_while(|val| val != <span class="string">"--"</span>);
     args.any(|val| val == name)
 }
 
-<span class="comment">// Gets the value of a `name`.
-// `--name value` or `--name=value`
+<span class="doccomment">/// Gets the value of `name`.
+/// `--name value` or `--name=value`
 </span><span class="kw">fn </span>get_arg_flag_value(name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>args = std::env::args().take_while(|val| val != <span class="string">"--"</span>);
     <span class="kw">loop </span>{
@@ -579,7 +591,7 @@ Usage:
     }
 }
 
-<span class="comment">// Returns the target of the toolchain, e.g. "x86_64-unknown-linux-gnu".
+<span class="doccomment">/// Returns the target of the toolchain, e.g. "x86_64-unknown-linux-gnu".
 </span><span class="kw">fn </span>toolchain_target() -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
     <span class="kw">let </span>sysroot = util::find_sysroot();
 

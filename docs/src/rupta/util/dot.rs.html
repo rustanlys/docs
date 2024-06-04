@@ -395,13 +395,13 @@
 <a href="#393" id="393">393</a>
 <a href="#394" id="394">394</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Simple graphviz dot file format output.
-//! Adapted from dot.rs in petgraph.
+//! Adapted from `dot.rs` in `petgraph`.
 
 </span><span class="kw">use </span>std::fmt::{<span class="self">self</span>, Display, Write};
 
 <span class="kw">use </span>petgraph::visit::{EdgeRef, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeIndexable, NodeRef};
 
-<span class="doccomment">/// `Dot` implements output to graphviz .dot format for a graph.
+<span class="doccomment">/// `Dot` implements output to graphviz `.dot` format for a graph.
 ///
 /// Formatting and options are rather simple, this is mostly intended
 /// for debugging. Exact output may change.

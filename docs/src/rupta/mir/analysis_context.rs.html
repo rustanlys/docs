@@ -328,13 +328,6 @@
 <a href="#326" id="326">326</a>
 <a href="#327" id="327">327</a>
 <a href="#328" id="328">328</a>
-<a href="#329" id="329">329</a>
-<a href="#330" id="330">330</a>
-<a href="#331" id="331">331</a>
-<a href="#332" id="332">332</a>
-<a href="#333" id="333">333</a>
-<a href="#334" id="334">334</a>
-<a href="#335" id="335">335</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
@@ -363,45 +356,45 @@
 
 <span class="doccomment">/// Global information of the analysis
 </span><span class="kw">pub struct </span>AnalysisContext&lt;<span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>&gt; {
-    <span class="doccomment">/// The central data structure of the compiler
+    <span class="doccomment">/// The central data structure of the compiler.
     </span><span class="kw">pub </span>tcx: TyCtxt&lt;<span class="lifetime">'tcx</span>&gt;,
 
-    <span class="doccomment">/// Represents the data associated with a compilation session for a single crate
+    <span class="doccomment">/// Represents the data associated with a compilation session for a single crate.
     </span><span class="kw">pub </span>session: <span class="kw-2">&amp;</span><span class="lifetime">'compilation </span>Session,
 
-    <span class="doccomment">/// The entry function of the analysis
+    <span class="doccomment">/// The entry function of the analysis.
     </span><span class="kw">pub </span>entry_point: DefId,
 
-    <span class="doccomment">/// Options of the analysis
+    <span class="doccomment">/// Options of the analysis.
     </span><span class="kw">pub </span>analysis_options: AnalysisOptions,
 
     <span class="kw">pub </span>functions: IndexVec&lt;FuncId, Rc&lt;FunctionReference&lt;<span class="lifetime">'tcx</span>&gt;&gt;&gt;,
     <span class="kw">pub </span>func_id_map: HashMap&lt;Rc&lt;FunctionReference&lt;<span class="lifetime">'tcx</span>&gt;&gt;, FuncId&gt;,
     <span class="kw">pub </span>func_name_cache: HashMap&lt;FuncId, Box&lt;str&gt;&gt;, 
 
-    <span class="doccomment">/// Provides a way to refer to a  rustc_middle::ty::Ty via a handle that does not have
-    /// a life time specifier
+    <span class="doccomment">/// Provides a way to refer to a  `rustc_middle::ty::Ty` via a handle that does not have
+    /// a life time specifier.
     </span><span class="kw">pub </span>type_cache: TypeCache&lt;<span class="lifetime">'tcx</span>&gt;,
 
-    <span class="doccomment">/// Record the original type for each object
+    <span class="doccomment">/// Record the original type for each object.
     </span><span class="kw">pub </span>path_ty_cache: HashMap&lt;Rc&lt;Path&gt;, Ty&lt;<span class="lifetime">'tcx</span>&gt;&gt;,
     <span class="doccomment">/// Record the memory size for each stack and heap object.
     </span><span class="kw">pub </span>path_memory_size: HashMap&lt;Rc&lt;Path&gt;, usize&gt;,
 
-    <span class="doccomment">/// Manage the cast types for each object
+    <span class="doccomment">/// Manage the cast types for each object.
     </span><span class="kw">pub </span>path_cast_cache: PathCastCache&lt;<span class="lifetime">'tcx</span>&gt;,
 
-    <span class="doccomment">/// Cache all the pointer type fields' projections for each type
+    <span class="doccomment">/// Cache all the pointer type fields' projections for each type.
     </span><span class="kw">pub </span>ptr_projs_cache: PointerProjectionsCache&lt;<span class="lifetime">'tcx</span>&gt;,
-    <span class="doccomment">/// Cache the byte offset for each field of type
+    <span class="doccomment">/// Cache the byte offset for each field of type.
     </span><span class="kw">pub </span>field_byte_offset_cache: FieldByteOffsetCache&lt;<span class="lifetime">'tcx</span>&gt;,
 
     <span class="kw">pub </span>dyn_callsite_cache: HashMap&lt;BaseCallSite, CalleeIdentifier&lt;<span class="lifetime">'tcx</span>&gt;&gt;,
 
-    <span class="doccomment">/// Functions specially handled in special_function_handler
+    <span class="doccomment">/// Functions specially handled in special_function_handler.
     </span><span class="kw">pub </span>special_functions: HashSet&lt;FuncId&gt;,
 
-    <span class="doccomment">/// Heap objects that have been cast to a concretized type
+    <span class="doccomment">/// Heap objects that have been cast to a concretized type.
     </span><span class="kw">pub </span>concretized_heap_objs: HashMap&lt;Rc&lt;Path&gt;, Ty&lt;<span class="lifetime">'tcx</span>&gt;&gt;,
 
     <span class="doccomment">/// Record the max index of the auxiliary local variable for each function instance.
@@ -476,7 +469,7 @@
         </span>}
     }
 
-    <span class="doccomment">/// Updates the type cache so that looking up the type of path returns ty.
+    <span class="doccomment">/// Records the type of `path`.
     </span><span class="kw">pub fn </span>set_path_rustc_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: Rc&lt;Path&gt;, ty: Ty&lt;<span class="lifetime">'tcx</span>&gt;) {
         <span class="kw">let </span>erase_regions_ty = <span class="self">self</span>.tcx.erase_regions_ty(ty);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.path_ty_cache.get(<span class="kw-2">&amp;</span>path) {
@@ -484,7 +477,6 @@
                 <span class="kw">return</span>;
             } <span class="kw">else if </span>!ty.is_impl_trait() {
                 <span class="comment">// An impl trait type maybe updated to a concrete type later
-                // warn!("Different types set to path {:?}: {:?}, {:?}", path, *t, ty);
             </span>}
         }
         <span class="self">self</span>.path_ty_cache.insert(path, erase_regions_ty);
@@ -497,7 +489,7 @@
         <span class="prelude-val">None
     </span>}
 
-    <span class="doccomment">/// Caches the size of the path
+    <span class="doccomment">/// Records the size of `path``.
     </span><span class="kw">pub fn </span>set_path_memory_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: Rc&lt;Path&gt;, ty: Ty&lt;<span class="lifetime">'tcx</span>&gt;) {
         <span class="kw">let </span>max_size = <span class="number">10000</span>;
         <span class="kw">match </span>path.value {
@@ -531,7 +523,7 @@
         <span class="self">self</span>.type_cache.get_type(index)
     }
 
-    <span class="doccomment">/// Creates a path that casts the given path to a given type
+    <span class="doccomment">/// Creates a path cast from the given path.
     </span><span class="kw">pub fn </span>cast_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>Rc&lt;Path&gt;, ty: Ty&lt;<span class="lifetime">'tcx</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Rc&lt;Path&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>path_cast_cache = std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.path_cast_cache);
         <span class="kw">let </span>res = path_cast_cache.cast_to(<span class="self">self</span>, path, ty);
@@ -542,7 +534,7 @@
         res
     }
 
-    <span class="doccomment">/// Returns the type variant of the given path, returns none if the path has not been cast to ty
+    <span class="doccomment">/// Returns the type variant of the given path, returns `None` if the path has not been cast to `ty`.
     </span><span class="kw">pub fn </span>get_type_variant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>Rc&lt;Path&gt;, ty: Ty&lt;<span class="lifetime">'tcx</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Rc&lt;Path&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>path_cast_cache = std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.path_cast_cache);
         <span class="kw">let </span>res = path_cast_cache.get_type_variant(<span class="self">self</span>, path, ty);
@@ -554,12 +546,12 @@
     }
 
     <span class="doccomment">/// Different paths may refer to the same memory location, we can regularize these path to a base path
-    /// e.g. a.0.0, a.0, a.cast#T' and a are all represented by one path
+    /// e.g. `a.0.0`, `a.0`, `a.cast#T'` and `a` will all be represented by one path.
     </span><span class="kw">pub fn </span>get_regularized_path(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: Rc&lt;Path&gt;) -&gt; Rc&lt;Path&gt; {
         PathCastCache::get_regularized_path(<span class="self">self</span>, path)
     }
 
-    <span class="doccomment">/// Returns the types that a path may be cast to
+    <span class="doccomment">/// Returns the types that a path have been cast to.
     </span><span class="kw">pub fn </span>get_cast_types(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>Rc&lt;Path&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>HashSet&lt;Ty&lt;<span class="lifetime">'tcx</span>&gt;&gt;&gt; {
         <span class="self">self</span>.path_cast_cache.get_cast_types(path)
     }
@@ -569,7 +561,7 @@
         <span class="self">self</span>.ptr_projs_cache.get_pointer_projections(<span class="self">self</span>.tcx, ty)
     }
 
-    <span class="doccomment">/// Get the byte offset of a specific field 
+    <span class="doccomment">/// Get the byte offset of a specific field.
     </span><span class="kw">pub fn </span>get_field_byte_offset(<span class="kw-2">&amp;mut </span><span class="self">self</span>, base_ty: Ty&lt;<span class="lifetime">'tcx</span>&gt;, proj: <span class="kw-2">&amp;</span>ProjectionElems) -&gt; usize {
         <span class="self">self</span>.field_byte_offset_cache
             .get_field_byte_offset(<span class="self">self</span>.tcx, base_ty, proj)
@@ -644,17 +636,11 @@
         <span class="self">self</span>.known_names_cache.get(<span class="self">self</span>.tcx, def_id)
     }
 
-    <span class="doccomment">/// Creates an auxiliary local variable with the given type for the given func_id.
+    <span class="doccomment">/// Creates an auxiliary local variable with the given type for the given `func_id`.
     /// Returns the path of the auxiliary local variable.
     ///
-    /// Auxiliary local variables are introduced for handling special statements.
-    /// For example, given a ReifyFnPointer Cast statement which casts a function item
-    /// of FnDef type to a function pointer, we add an addr_of edge from the right-hand-side
-    /// path to the left-hand-side path. However, the left place of this statement can be a
-    /// dereference, e.g. `(*_2) = times2 as fn(i32) -&gt; i32 (Pointer(ReifyFnPointer));`
-    /// For this case, we create an auxiliary local variable `aux` to split this statement
-    /// into two statements: `aux = times2 as fn(i32) -&gt; i32 (Pointer(ReifyFnPointer));` and
-    /// `(*2) = aux`.
+    /// Auxiliary local variables are introduced for breaking donw complex statements into
+    /// simple assignments.
     </span><span class="kw">pub fn </span>create_aux_local(<span class="kw-2">&amp;mut </span><span class="self">self</span>, func_id: FuncId, ty: Ty&lt;<span class="lifetime">'tcx</span>&gt;) -&gt; Rc&lt;Path&gt; {
         <span class="kw">let </span>aux_local_index = <span class="kw-2">*</span><span class="self">self</span>.aux_local_indexer.get(<span class="kw-2">&amp;</span>func_id).expect(<span class="string">"aux_local_index"</span>);
         <span class="macro">debug!</span>(

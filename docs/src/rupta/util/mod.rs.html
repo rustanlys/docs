@@ -203,13 +203,13 @@
 <span class="kw">pub mod </span>type_util;
 <span class="kw">pub mod </span>unsafe_statistics;
 
-<span class="doccomment">/// Copied from Mirai
-/// Returns the location of the rust system binaries that are associated with this build of rust-pta.
+
+<span class="doccomment">/// Returns the location of the rust system binaries that are associated with this build of rust-pta.
 /// The location is obtained by looking at the contents of the environmental variables that were
 /// set at the time rust-pta was compiled. If the rust compiler was installed by rustup, the variables
-/// RUSTUP_HOME and RUSTUP_TOOLCHAIN are used and these are set by the compiler itself.
+/// `RUSTUP_HOME` and `RUSTUP_TOOLCHAIN` are used and these are set by the compiler itself.
 /// If the rust compiler was compiled and installed in some other way, for example from a source
-/// enlistment, then the RUST_SYSROOT variable must be set in the environment from which rust-pta
+/// enlistment, then the `RUST_SYSROOT` variable must be set in the environment from which rust-pta
 /// is compiled.
 </span><span class="kw">pub fn </span>find_sysroot() -&gt; String {
     <span class="kw">let </span>home = <span class="macro">option_env!</span>(<span class="string">"RUSTUP_HOME"</span>);
@@ -241,7 +241,7 @@
     }
 }
 
-<span class="doccomment">/// Returns true if the function identified by def_id is defined as part of a trait.
+<span class="doccomment">/// Returns true if the function identified by `def_id` is defined as part of a trait.
 </span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>is_trait_method(tcx: TyCtxt&lt;<span class="lifetime">'_</span>&gt;, def_id: DefId) -&gt; bool {
     <span class="kw">if </span>tcx.trait_of_item(def_id).is_some() {
@@ -251,7 +251,7 @@
     </span>}
 }
 
-<span class="doccomment">/// Returns true if the function identified by def_id is defined in the Rust Standard Library.
+<span class="doccomment">/// Returns true if the function identified by `def_id` is defined in the Rust Standard Library.
 </span><span class="kw">pub fn </span>is_std_lib_func(tcx: TyCtxt&lt;<span class="lifetime">'_</span>&gt;, def_id: DefId) -&gt; bool {
     <span class="kw">let </span>crate_name = tcx.crate_name(def_id.krate);
     <span class="kw">match </span>crate_name.as_str() {
@@ -260,8 +260,8 @@
     }
 }
 
-<span class="doccomment">/// Returns true if the function has an explicit self (either self or &amp;(mut) self) as its first 
-/// parameter, allowing method calls
+<span class="doccomment">/// Returns true if the function has an explicit `self` (either `self` or `&amp;(mut) self`) as its first 
+/// parameter, allowing method calls.
 </span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>has_self_parameter(tcx: TyCtxt&lt;<span class="lifetime">'_</span>&gt;, def_id: DefId) -&gt; bool {
     <span class="kw">if </span>!tcx.is_mir_available(def_id) {
@@ -274,7 +274,7 @@
     </span>}
 }
 
-<span class="doccomment">/// Returns true if the function has an explicit &amp;(mut) self as its first parameter, allowing method calls
+<span class="doccomment">/// Returns true if the function has an explicit `&amp;(mut) self` as its first parameter, allowing method calls.
 </span><span class="kw">pub fn </span>has_self_ref_parameter(tcx: TyCtxt&lt;<span class="lifetime">'_</span>&gt;, def_id: DefId) -&gt; bool {
     <span class="kw">if </span>has_self_parameter(tcx, def_id) {
         <span class="kw">let </span>mir = tcx.optimized_mir(def_id);
@@ -288,8 +288,8 @@
     </span>}
 }
 
-
-<span class="attr">#[inline]
+<span class="doccomment">/// Returns true if the call to (`callee_def_id`, `callee_substs`) is a dynamic call.
+</span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>is_dynamic_call&lt;<span class="lifetime">'tcx</span>&gt;(
     tcx: TyCtxt&lt;<span class="lifetime">'tcx</span>&gt;,
     callee_def_id: DefId,
@@ -328,7 +328,7 @@
         .collect()
 }
 
-<span class="doccomment">/// Returns an offset_path equivalent to the qualified_path
+<span class="doccomment">/// Returns an `offset_path` equivalent to the `qualified_path`.
 </span><span class="kw">pub fn </span>qualified_path_to_offset_path(acx: <span class="kw-2">&amp;mut </span>AnalysisContext, path: Rc&lt;Path&gt;) -&gt; Rc&lt;Path&gt; {
     <span class="kw">if let </span>PathEnum::QualifiedPath { base, projection } = <span class="kw-2">&amp;</span>path.value {
         <span class="kw">let </span>base_ty = acx.get_path_rustc_type(base).unwrap();

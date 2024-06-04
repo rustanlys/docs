@@ -176,6 +176,8 @@
 // This source code is licensed under the GNU license found in the
 // LICENSE file in the root directory of this source tree.
 
+</span><span class="doccomment">//! Memory usage monitoring. Currently only supported on Linux.
+
 </span><span class="kw">use </span>std::sync::{Mutex, Arc};
 <span class="kw">use </span>std::thread::{JoinHandle, <span class="self">self</span>};
 <span class="kw">use </span>std::{fs::File, io::Read};
@@ -189,9 +191,7 @@
 <span class="kw">use </span>nom::bytes::streaming::tag;
 <span class="kw">use </span>nom::multi::count;
 
-<span class="doccomment">/// Process memory usage information from `/proc/[pid]/statm`.
-
-/// Process memory usage information.
+<span class="doccomment">/// Memory usage information prcessed from `/proc/[pid]/statm`.
 ///
 /// All values are in units of pages.
 ///

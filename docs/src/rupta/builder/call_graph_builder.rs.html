@@ -77,44 +77,66 @@
 <a href="#75" id="75">75</a>
 <a href="#76" id="76">76</a>
 <a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
 // LICENSE file in the root directory of this source tree.
+
+</span><span class="doccomment">//! This module provides essential functions for resolving call targets.
 
 </span><span class="kw">use </span>rustc_hir::def_id::DefId;
 <span class="kw">use </span>rustc_middle::ty::{GenericArgsRef, TyCtxt, TyKind};
 
 <span class="kw">use </span><span class="kw">crate</span>::util;
 
-<span class="doccomment">/// Try to resolve the given FnDef, devirtualize the callee function if possible.
+<span class="doccomment">/// Try to resolve the function with `def_id` and `gen_args`. 
+/// 
+/// If the function is not a trait method, (`def_id`, `gen_args`) is returned
+/// directly. Otherwise, the function is devirtualized to a specific implementation.
 </span><span class="kw">pub fn </span>resolve_fn_def&lt;<span class="lifetime">'tcx</span>&gt;(
     tcx: TyCtxt&lt;<span class="lifetime">'tcx</span>&gt;,
-    callee_def_id: DefId,
+    def_id: DefId,
     gen_args: GenericArgsRef&lt;<span class="lifetime">'tcx</span>&gt;,
 ) -&gt; (DefId, GenericArgsRef&lt;<span class="lifetime">'tcx</span>&gt;) {
-    <span class="kw">if </span>tcx.is_mir_available(callee_def_id) &amp;&amp; !util::is_trait_method(tcx, callee_def_id) {
-        (callee_def_id, gen_args)
-    } <span class="kw">else if let </span><span class="prelude-val">Some</span>((callee_def_id, callee_substs)) =
-        try_to_devirtualize(tcx, callee_def_id, gen_args)
+    <span class="kw">if </span>tcx.is_mir_available(def_id) &amp;&amp; !util::is_trait_method(tcx, def_id) {
+        (def_id, gen_args)
+    } <span class="kw">else if let </span><span class="prelude-val">Some</span>((resolved_def_id, resolved_substs)) =
+        try_to_devirtualize(tcx, def_id, gen_args)
     {
-        (callee_def_id, callee_substs)
+        (resolved_def_id, resolved_substs)
     } <span class="kw">else </span>{
-        <span class="comment">// if the mir is unavailable or the callee cannot be resolved, return the callee_def_id directly
-        </span>(callee_def_id, gen_args)
+        <span class="comment">// if the function cannot be resolved, 
+        // return the original (def_id, gen_args) pair directly.
+        </span>(def_id, gen_args)
     }
 }
 
-<span class="kw">pub fn </span>try_to_devirtualize&lt;<span class="lifetime">'tcx</span>&gt;(
+<span class="doccomment">/// Try to devirtualize a trait method with `def_id` and `gen_args`. 
+/// 
+/// Returns `None` if the given `def_id` does not correspond to a trait method or 
+/// we cannot resolve the trait method to a specific instance. For example, the 
+/// first gen_arg is a dynamic type.
+</span><span class="kw">pub fn </span>try_to_devirtualize&lt;<span class="lifetime">'tcx</span>&gt;(
     tcx: TyCtxt&lt;<span class="lifetime">'tcx</span>&gt;,
-    callee_def_id: DefId,
+    def_id: DefId,
     gen_args: GenericArgsRef&lt;<span class="lifetime">'tcx</span>&gt;,
 ) -&gt; <span class="prelude-ty">Option</span>&lt;(DefId, GenericArgsRef&lt;<span class="lifetime">'tcx</span>&gt;)&gt; {
-    <span class="kw">if </span>!util::is_trait_method(tcx, callee_def_id) {
+    <span class="kw">if </span>!util::is_trait_method(tcx, def_id) {
         <span class="kw">return </span><span class="prelude-val">None</span>;
     }
 
-    <span class="kw">let </span>arg0_ty = gen_args
+    <span class="comment">// A trait method cannot be devirtualized when the first gen_arg corresponds
+    // to a dynamic type.
+    </span><span class="kw">let </span>arg0_ty = gen_args
         .types()
         .next()
         .expect(<span class="string">"Expect `Self` substition in trait method invocation"</span>);
@@ -124,20 +146,20 @@
 
     <span class="kw">let </span>param_env = rustc_middle::ty::ParamEnv::reveal_all();
     <span class="kw">let </span>abi = tcx
-        .type_of(callee_def_id)
+        .type_of(def_id)
         .skip_binder()
         .fn_sig(tcx)
         .abi();    
     <span class="kw">let </span>resolved_instance = <span class="kw">if </span>abi == rustc_target::spec::abi::Abi::Rust {
         <span class="comment">// Instance::resolve panics if try_normalize_erasing_regions returns an error.
-        // It is hard to figure out exactly when this will be the case.
+        // It is difficult to determine exactly when this error will occur.
         </span><span class="kw">if </span>tcx.try_normalize_erasing_regions(param_env, gen_args).is_err() {
             <span class="prelude-val">None
         </span>} <span class="kw">else </span>{
             <span class="prelude-val">Some</span>(rustc_middle::ty::Instance::resolve(
                 tcx,
                 param_env,
-                callee_def_id,
+                def_id,
                 gen_args,
             ))
         }
@@ -146,10 +168,6 @@
     </span>};
     <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(instance))) = resolved_instance {
         <span class="kw">let </span>resolved_def_id = instance.def.def_id();
-        <span class="kw">let </span>has_mir = tcx.is_mir_available(resolved_def_id);
-        <span class="kw">if </span>!has_mir {
-            <span class="kw">return </span><span class="prelude-val">None</span>;
-        }
         <span class="kw">return </span><span class="prelude-val">Some</span>((resolved_def_id, instance.args));
     }
     <span class="prelude-val">None

@@ -91,6 +91,7 @@
 <a href="#89" id="89">89</a>
 <a href="#90" id="90">90</a>
 <a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
@@ -105,25 +106,26 @@
 <span class="kw">use </span><span class="kw">crate</span>::mir::path::Path;
 <span class="kw">use </span><span class="kw">crate</span>::util::chunked_queue::{<span class="self">self</span>, ChunkedQueue};
 
-<span class="doccomment">/// A tuple type consisiting of source path, destination path and path edge type
+<span class="doccomment">/// An edge consists of the source path, the destination path and the PAG edge type.
 </span><span class="kw">pub type </span>InternalEdge = (Rc&lt;Path&gt;, Rc&lt;Path&gt;, PAGEdgeEnum);
 
-<span class="kw">pub struct </span>FuncPAG {
+<span class="doccomment">/// A function's pointer assignment graph, part of the whole program's PAG.
+</span><span class="kw">pub struct </span>FuncPAG {
     <span class="kw">pub</span>(<span class="kw">crate</span>) func_id: FuncId,
     <span class="kw">pub</span>(<span class="kw">crate</span>) internal_edges: ChunkedQueue&lt;InternalEdge&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) static_variables_involved: HashSet&lt;Rc&lt;Path&gt;&gt;,
 
-    <span class="comment">// Call sites that can be statically resolved, including the Fn* trait calls that can 
+    <span class="comment">// Calls that can be statically resolved, including the Fn* trait calls that can 
     // be directly resolved. 
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) static_dispatch_callsites: Vec&lt;(Rc&lt;CallSite&gt;, FuncId)&gt;,
-    <span class="comment">// Special calls like alloc() 
+    <span class="comment">// Special calls like alloc().
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) special_callsites: Vec&lt;(Rc&lt;CallSite&gt;, FuncId)&gt;,
-    <span class="comment">// Pairs of the dynamic type receiver and its corresponding callsite.
+    <span class="comment">// Pairs of dynamic type receivers and their corresponding callsites.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) dynamic_dispatch_callsites: Vec&lt;(Rc&lt;Path&gt;, Rc&lt;CallSite&gt;)&gt;,
-    <span class="comment">// Pairs of the first argument of Fn::call, FnMut::call_mut, FnOnce::call_once call
-    // and the callsite that need to be resolved on-the-fly
+    <span class="comment">// Pairs of the first arguments of dynamic `Fn::call`, `FnMut::call_mut`, 
+    // `FnOnce::call_once` calls and the callsites.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) dynamic_fntrait_callsites: Vec&lt;(Rc&lt;Path&gt;, Rc&lt;CallSite&gt;)&gt;,
-    <span class="comment">// Pairs of the function pointer and its corresponding callsite, including the fnptr
+    <span class="comment">// Pairs of function pointers and their callsites, including the fnptr
     // callsites that are speciallized from a Fn* trait callsite.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) fnptr_callsites: Vec&lt;(Rc&lt;Path&gt;, Rc&lt;CallSite&gt;)&gt;,
 }

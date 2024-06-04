@@ -228,10 +228,14 @@
 <a href="#226" id="226">226</a>
 <a href="#227" id="227">227</a>
 <a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
 // LICENSE file in the root directory of this source tree.
+
+</span><span class="doccomment">//! Analysis options.
 
 </span><span class="kw">use </span>itertools::Itertools;
 
@@ -244,7 +248,7 @@
 
 <span class="kw">const </span>RUPTA_USAGE: <span class="kw-2">&amp;</span>str = <span class="string">r#"pta [OPTIONS] INPUT -- [RUSTC OPTIONS]"#</span>;
 
-<span class="doccomment">/// version information from Cargo.toml
+<span class="doccomment">/// The version information from Cargo.toml.
 </span><span class="kw">fn </span>version() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
     <span class="kw">let </span>version_info = <span class="macro">rustc_tools_util::get_version_info!</span>();
     <span class="kw">let </span>version = <span class="macro">format!</span>(<span class="string">"v{}.{}.{}"</span>, version_info.major, version_info.minor, version_info.patch);

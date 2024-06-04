@@ -335,10 +335,29 @@
 <a href="#333" id="333">333</a>
 <a href="#334" id="334">334</a>
 <a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
 // LICENSE file in the root directory of this source tree.
+
+</span><span class="doccomment">//! Specializes generic types to concrete types.
+//! 
+//! Adapted primarily from the code in [MIRAI](&lt;https://github.com/facebookexperimental/MIRAI&gt;).
+//! 
+//! For example:
+//!
+//! ```no_run
+//! fn foo&lt;T&gt;(t: T) {}
+//! fn bar&lt;U, V&gt;(u: U, v: V) { foo(u); foo(v); }
+//! fn main() { bar(3, 4.0); }
+//! ```
+//!
+//! The function `bar` is invoked in `main` with generic arguments `[i32, f64]`.
+//! During analysis, we specialize the types of `u` and `v` in `bar` to `i32` and `f64` respectively.
+//! The calls to `foo(u)` and `foo(v)` can therefore be resolved to `foo::&lt;i32&gt;(u)` and 
+//! `foo::&lt;f64&gt;(v)` respectively.
 
 </span><span class="kw">use </span>log::<span class="kw-2">*</span>;
 <span class="kw">use </span>std::cell::RefCell;
@@ -355,21 +374,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::mir::function::GenericArgE;
 <span class="kw">use </span><span class="kw">crate</span>::util::type_util;
 
-<span class="doccomment">/// Adapted from type_visitor in MIRAI (https://github.com/facebookexperimental/MIRAI)
-/// Specializes generic types with the concrete substituions
-///
-/// For example given:
-///
-/// ```no_run
-/// fn foo&lt;T&gt;(t: T) {}
-/// fn bar&lt;U, V&gt;(u: U, v: V) { foo(u); foo(v); }
-/// fn main() { bar(3, 4.0); }
-/// ```
-///
-/// The substs of `bar` is `[i32, f64]` for the invocation in `main`.
-/// Then we can specialize the locals' types in `bar` using the substs.
-/// We can further resolve `foo(u)` as `foo&lt;i32&gt;(u)` and `foo&lt;v&gt;` as `foo&lt;64&gt;(v)`.
-</span><span class="kw">pub struct </span>SubstsSpecializer&lt;<span class="lifetime">'tcx</span>&gt; {
+
+<span class="kw">pub struct </span>SubstsSpecializer&lt;<span class="lifetime">'tcx</span>&gt; {
     <span class="kw">pub </span>tcx: TyCtxt&lt;<span class="lifetime">'tcx</span>&gt;,
     <span class="kw">pub </span>generic_args: Vec&lt;GenericArgE&lt;<span class="lifetime">'tcx</span>&gt;&gt;,
     <span class="kw">pub </span>closures_being_specialized: RefCell&lt;HashSet&lt;DefId&gt;&gt;,
@@ -504,7 +510,7 @@
             };
         }
 
-        <span class="comment">// If the type is a opaque type, substitute it with the concrete type.
+        <span class="comment">// If the type is an opaque type, substitute it with the concrete type.
         // An opaque type is usually from impl Trait in type aliases or function return types
         </span><span class="kw">if let </span>TyKind::Alias(
             rustc_middle::ty::Opaque, 
@@ -522,9 +528,7 @@
             </span><span class="kw">return </span>specialized_type;
         }
 
-        <span class="comment">// We do not skip when the generic args is empty. Because we still need to specialize the opaque types
-        // contained in the adt's generic args.
-        </span><span class="kw">match </span>gen_arg_type.kind() {
+        <span class="kw">match </span>gen_arg_type.kind() {
             TyKind::Adt(def, args) =&gt; {
                 Ty::new_adt(<span class="self">self</span>.tcx, <span class="kw-2">*</span>def, <span class="self">self</span>.specialize_generic_args(args))
             }

@@ -264,7 +264,6 @@
 <a href="#262" id="262">262</a>
 <a href="#263" id="263">263</a>
 <a href="#264" id="264">264</a>
-<a href="#265" id="265">265</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
@@ -348,7 +347,7 @@
         <span class="self">self</span>.acx.tcx
     }
 
-    <span class="doccomment">/// Initialize analysis
+    <span class="doccomment">/// Initialize the analysis.
     </span><span class="kw">pub fn </span>initialize(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="comment">// add the entry point to the call graph
         </span><span class="kw">let </span>entry_point = <span class="self">self</span>.acx.entry_point;
@@ -359,7 +358,7 @@
         </span><span class="self">self</span>.process_reach_funcs();
     }
 
-    <span class="doccomment">/// Solve the worklist problem by using Propagator
+    <span class="doccomment">/// Solve the worklist problem using Propagator.
     </span><span class="kw">pub fn </span>propagate(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">let </span><span class="kw-2">mut </span>iter_proc_edge_iter = <span class="self">self</span>.inter_proc_edges_queue.iter_copied();
         <span class="comment">// Solve until no new call relationship is found.
@@ -387,7 +386,7 @@
         }
     }
 
-    <span class="doccomment">/// Process statements of reachable functions.
+    <span class="doccomment">/// Process statements in reachable functions.
     </span><span class="kw">fn </span>process_reach_funcs(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">while let </span><span class="prelude-val">Some</span>(func_id) = <span class="self">self</span>.rf_iter.next() {
             <span class="kw">if </span>!<span class="self">self</span>.processed_funcs.contains(<span class="kw-2">&amp;</span>func_id) {
@@ -399,7 +398,7 @@
         }
     }
 
-    <span class="doccomment">/// Adds internal edges of a function pag to pag.
+    <span class="doccomment">/// Adds internal edges of a function pag to the whole program's pag.
     /// The function pag for the given def_id should be built before calling this function.
     </span><span class="kw">pub fn </span>add_fpag_edges(<span class="kw-2">&amp;mut </span><span class="self">self</span>, func_id: FuncId) {
         <span class="kw">if </span><span class="self">self</span>.processed_funcs.contains(<span class="kw-2">&amp;</span>func_id) {
@@ -491,13 +490,12 @@
         }
     }
 
-    <span class="comment">// Get points-to data
-    </span><span class="attr">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">pub fn </span>get_pt_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>DiffPTDataTy {
         <span class="kw-2">&amp;</span><span class="self">self</span>.pt_data
     }
 
-    <span class="doccomment">/// Finalize analysis
+    <span class="doccomment">/// Finalize the analysis.
     </span><span class="kw">pub fn </span>finalize(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="comment">// dump call graph, points-to results
         </span>results_dumper::dump_results(<span class="self">self</span>.acx, <span class="kw-2">&amp;</span><span class="self">self</span>.call_graph, <span class="kw-2">&amp;</span><span class="self">self</span>.pt_data, <span class="kw-2">&amp;</span><span class="self">self</span>.pag);

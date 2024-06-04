@@ -144,10 +144,16 @@
 <a href="#142" id="142">142</a>
 <a href="#143" id="143">143</a>
 <a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
 // LICENSE file in the root directory of this source tree.
+
+</span><span class="doccomment">//! Contexts used in context-sensitive pointer analysis.
 
 </span><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::fmt::{Debug, Formatter, <span class="prelude-ty">Result</span>};
@@ -169,7 +175,8 @@
 
 <span class="kw">pub trait </span>ContextElement: Clone + Eq + PartialEq + Debug + Hash {}
 
-<span class="attr">#[derive(Clone, PartialEq, Eq, Hash)]
+<span class="doccomment">/// A context is composed of a list of context elements, e.g. callsites.
+</span><span class="attr">#[derive(Clone, PartialEq, Eq, Hash)]
 </span><span class="kw">pub struct </span>Context&lt;E: ContextElement&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) context_elems: Vec&lt;E&gt;,
 }
@@ -196,8 +203,8 @@
         <span class="self">self</span>.context_elems.len()
     }
 
-    <span class="doccomment">/// Compose a new context from a given context and a new context element.
-    /// Discard the last old context element if the length of context exceeds the depth limit  
+    <span class="doccomment">/// Composes a new context from a given context and a new context element.
+    /// Discard the last old context element if the length of context exceeds the depth limit.
     </span><span class="kw">pub fn </span>new_k_limited_context(old_ctx: <span class="kw-2">&amp;</span>Rc&lt;Context&lt;E&gt;&gt;, elem: E, k: usize) -&gt; Rc&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>elems = Vec::with_capacity(k);
         <span class="kw">if </span>k &gt; <span class="number">0 </span>{
@@ -231,7 +238,8 @@
 }
 
 
-<span class="attr">#[derive(Debug)]
+<span class="doccomment">/// Maintaing the contexts used.
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>ContextCache&lt;E: ContextElement&gt; {
     context_list: IndexVec&lt;ContextId, Rc&lt;Context&lt;E&gt;&gt;&gt;,
     context_to_index_map: HashMap&lt;Rc&lt;Context&lt;E&gt;&gt;, ContextId&gt;,
@@ -251,7 +259,7 @@
         }
     }
 
-    <span class="doccomment">/// Returns a non zero index that can be used to retrieve context via get_context.
+    <span class="doccomment">/// Returns a non zero index that can be used to retrieve context via `get_context`.
     </span><span class="kw">pub fn </span>get_context_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;</span>Rc&lt;Context&lt;E&gt;&gt;) -&gt; ContextId {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.context_to_index_map.get(context) {
             <span class="kw-2">*</span>id

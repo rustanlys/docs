@@ -322,18 +322,17 @@
 <span class="kw">use </span><span class="kw">super</span>::points_to::PointsToSet;
 <span class="kw">use </span><span class="kw">crate</span>::util::bit_vec::Idx;
 
-<span class="doccomment">/// Basic points-to data structure
-/// Given a key (variable/condition variable), return its points-to data (pts/condition pts)
-/// It is designed flexible for different context, heap and path sensitive analysis
-/// Context Insensitive			   Key --&gt; Variable, DataSet --&gt; PointsTo
-/// Context sensitive:  			   Key --&gt; CondVar,  DataSet --&gt; PointsTo
-/// Heap sensitive:     			   Key --&gt; Variable  DataSet --&gt; CondPointsToSet
-/// Context and heap sensitive:     Key --&gt; CondVar,  DataSet --&gt; CondPointsToSet
+<span class="doccomment">/// Basic points-to data structure.
+/// 
+/// Given a key (variable/condition variable), return its points-to data (pts/context-sensitve pts).
+/// It is designed flexible for different context, heap and path sensitive analysis.
+///  1. Context Insensitive:	Key --&gt; Pointer, DataSet --&gt; PointsTo
+///  2. Context sensitive:  	Key --&gt; CSPointer,  DataSet --&gt; CSPointsTo
 ///
-/// K  (Key):     "owning" variable of a points-to set.
-/// KS (KeySet):  collection of keys.
-/// D  (Data):    elements in points-to sets.
-/// DS (DataSet): the points-to set; a collection of Data.
+/// * K  (Key):     "owning" variable of a points-to set.
+/// * KS (KeySet):  collection of keys.
+/// * D  (Data):    elements in points-to sets.
+/// * DS (DataSet): the points-to set; a collection of Data.
 </span><span class="kw">pub struct </span>BasePTData&lt;K, KS, D, DS&gt; {
     pts_map: HashMap&lt;K, DS&gt;,
     rev_pts_map: HashMap&lt;D, KS&gt;,
@@ -451,6 +450,7 @@
 }
 
 <span class="doccomment">/// Diff points-to data.
+/// 
 /// This is an optimisation on top of the base points-to data structure.
 /// The points-to information is propagated incrementally only for the different parts.
 </span><span class="kw">pub struct </span>DiffPTData&lt;K, D, DS&gt; {

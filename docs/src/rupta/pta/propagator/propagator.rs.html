@@ -1083,10 +1083,16 @@
 <a href="#1081" id="1081">1081</a>
 <a href="#1082" id="1082">1082</a>
 <a href="#1083" id="1083">1083</a>
+<a href="#1084" id="1084">1084</a>
+<a href="#1085" id="1085">1085</a>
+<a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
 // LICENSE file in the root directory of this source tree.
+
+</span><span class="doccomment">//! The key component of our pointer analysis. 
 
 </span><span class="kw">use </span>std::collections::{HashSet, VecDeque};
 <span class="kw">use </span>std::rc::Rc;
@@ -1105,7 +1111,9 @@
 <span class="kw">use </span><span class="kw">crate</span>::pts_set::points_to::PointsToSet;
 <span class="kw">use </span><span class="kw">crate</span>::util::{<span class="self">self</span>, chunked_queue, type_util};
 
-<span class="kw">pub struct </span>Propagator&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>, F, P: PAGPath&gt; {
+
+<span class="doccomment">/// Propagating the points-to information along the PAG edges. 
+</span><span class="kw">pub struct </span>Propagator&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>, F, P: PAGPath&gt; {
     <span class="doccomment">/// The analysis context
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) acx: <span class="kw-2">&amp;</span><span class="lifetime">'pta </span><span class="kw-2">mut </span>AnalysisContext&lt;<span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>&gt;,
     <span class="doccomment">/// Points-to data
@@ -1193,9 +1201,9 @@
         }
     }
 
-    <span class="kw">pub fn </span>init_constraints(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="comment">// Initialize worklist, activate new constraints
-        </span><span class="self">self</span>.process_all_addr_edges();
+    <span class="doccomment">/// Initialize the worklist, activate new constraints.
+    </span><span class="kw">pub fn </span>init_constraints(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.process_all_addr_edges();
         <span class="self">self</span>.process_all_inter_proc_edges();
     }
 

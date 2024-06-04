@@ -749,6 +749,10 @@
 <a href="#747" id="747">747</a>
 <a href="#748" id="748">748</a>
 <a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
@@ -776,7 +780,10 @@
 <span class="doccomment">/// A non-empty list of projections
 </span><span class="kw">pub type </span>ProjectionElems = Vec&lt;PathSelector&gt;;
 
-<span class="attr">#[derive(Clone, PartialEq, Eq, Hash)]
+<span class="doccomment">/// The customized representation for a local variable, heap objects, ...
+/// 
+/// Resembles the `Place` type in rustc.
+</span><span class="attr">#[derive(Clone, PartialEq, Eq, Hash)]
 </span><span class="kw">pub struct </span>Path {
     <span class="kw">pub </span>value: PathEnum,
 }
@@ -787,7 +794,8 @@
     }
 }
 
-<span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+<span class="doccomment">/// A path augmented with a context.
+</span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 </span><span class="kw">pub struct </span>CSPath {
     <span class="kw">pub </span>cid: ContextId,
     <span class="kw">pub </span>path: Rc&lt;Path&gt;,
@@ -801,7 +809,8 @@
     }
 }
 
-<span class="attr">#[derive(Clone, PartialEq, Eq, Hash)]
+<span class="doccomment">/// Different kinds of `Path` used in our analysis.
+</span><span class="attr">#[derive(Clone, PartialEq, Eq, Hash)]
 </span><span class="kw">pub enum </span>PathEnum {
     <span class="doccomment">/// Locals [arg_count+1..] are the local variables and compiler temporaries.
     </span>LocalVariable {
@@ -1031,7 +1040,7 @@
         }
     }
 
-    <span class="doccomment">/// Creates a new auxiliary path
+    <span class="doccomment">/// Creates a new auxiliary path.
     </span><span class="kw">pub fn </span>new_aux(func_id: FuncId, ordinal: usize) -&gt; Rc&lt;Path&gt; {
         Rc::new(Path {
             value: PathEnum::Auxiliary { func_id, ordinal },
@@ -1114,7 +1123,7 @@
         <span class="self">Self</span>::append_projection_elem(<span class="kw-2">&amp;</span>base, PathSelector::UnionField(field_index))
     }
     
-    <span class="doccomment">/// Creates a path that selects the given downcast of the enum at the given path
+    <span class="doccomment">/// Creates a path that selects the given downcast of the enum at the given path.
     </span><span class="kw">pub fn </span>new_downcast(base: Rc&lt;Path&gt;, downcast_variant: usize) -&gt; Rc&lt;Path&gt; {
         <span class="self">Self</span>::append_projection_elem(<span class="kw-2">&amp;</span>base, PathSelector::Downcast(downcast_variant))
     }
@@ -1149,7 +1158,7 @@
         Path::add_offset(dyn_ptr_path, PTR_METADATA_OFFSET)
     }
 
-    <span class="doccomment">/// Creates a path by appending the projection elem
+    <span class="doccomment">/// Creates a path by appending the projection elem.
     </span><span class="kw">pub fn </span>append_projection_elem(path: <span class="kw-2">&amp;</span>Rc&lt;Path&gt;, projection_elem: PathSelector) -&gt; Rc&lt;Path&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;</span>path.value {
             PathEnum::QualifiedPath { base, projection } =&gt; {
@@ -1213,7 +1222,7 @@
         }
     }
 
-    <span class="doccomment">/// Returns the original path by removing the cast
+    <span class="doccomment">/// Returns the original path by removing the cast.
     </span><span class="kw">pub fn </span>remove_cast(path: <span class="kw-2">&amp;</span>Rc&lt;Path&gt;) -&gt; Rc&lt;Path&gt; {
         <span class="kw">if let </span>PathEnum::QualifiedPath { base: <span class="kw">_</span>, projection } = <span class="kw-2">&amp;</span>path.value {
             <span class="kw">if let </span>PathSelector::Cast(<span class="kw">_</span>) = projection.last().unwrap() {
@@ -1231,9 +1240,8 @@
     } 
 }
 
-<span class="doccomment">/// cannot define inherent `impl` for a type outside of the crate where the type is defined
-/// define and implement a trait or new type instead
-</span><span class="kw">pub trait </span>PathSupport {
+
+<span class="kw">pub trait </span>PathSupport {
     <span class="kw">fn </span>is_field_of(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>Rc&lt;Path&gt;) -&gt; bool;
     <span class="kw">fn </span>is_deref_path(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
 }

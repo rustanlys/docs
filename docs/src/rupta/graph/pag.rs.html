@@ -684,38 +684,38 @@
 
 <span class="attr">#[derive(Clone, Debug, PartialEq)]
 </span><span class="kw">pub enum </span>PAGEdgeEnum {
-    <span class="doccomment">/// Statements that create a reference or a raw pointer to the place.
+    <span class="doccomment">/// Statements that create a reference or a raw pointer to a place.
     </span>AddrPAGEdge,
     <span class="doccomment">/// Statements that create a value by direct assignment, including Move and Copy statements.
     </span>DirectPAGEdge,
     <span class="doccomment">/// Statements that create a value by loading the value pointed by a pointer.
-    /// e.g. _2 = (*_3), _2 = (*_3).0.1
+    /// e.g. `_2 = (*_3), _2 = (*_3).0.1`.
     </span>LoadPAGEdge(ProjectionElems),
     <span class="doccomment">/// Statements that store a value to a pointer's pointee.
-    /// e.g. (*_1) = _2, (*_1).0.1 = _2
+    /// e.g. `(*_1) = _2, (*_1).0.1 = _2`.
     </span>StorePAGEdge(ProjectionElems),
     <span class="doccomment">/// Similar to GetElementPtr instruction in llvm ir, get an element's address from
-    /// a pointed value, e.g. _2 = &amp;((*_3).0.1)
+    /// a pointed-to object, e.g. `_2 = &amp;((*_3).0.1)`
     </span>GepPAGEdge(ProjectionElems),
     <span class="doccomment">/// Cast a  pointer to another type
     </span>CastPAGEdge,
-    <span class="doccomment">/// Intrinsics call `offset`, Calculates the offset from a pointer.
+    <span class="doccomment">/// Statements that offset a pointer.
     </span>OffsetPAGEdge,
 }
 
 <span class="kw">type </span>EdgeMap = HashMap&lt;PAGNodeId, BTreeSet&lt;PAGEdgeId&gt;&gt;;
 
 <span class="kw">pub struct </span>PAG&lt;P: PAGPath&gt; {
-    <span class="doccomment">/// The graph structure capturing assignment relations between nodes
+    <span class="doccomment">/// The graph structure capturing assignment relations between nodes.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) graph: Graph&lt;PAGNode&lt;P&gt;, PAGEdge&gt;,
-    <span class="doccomment">/// A map from values to node id
+    <span class="doccomment">/// A map from values to node id.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) values: HashMap&lt;P, PAGNodeId&gt;,
     <span class="doccomment">/// Maintains a func_pag for each function, so that in context sensitive
-    /// analysis we only need to process each function for once
+    /// analysis we only need to process each function for once.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) func_pags: HashMap&lt;FuncId, FuncPAG&gt;,
-    <span class="doccomment">/// Maps each function to a set of related promoted functions
+    <span class="doccomment">/// Maps each function to a set of related promoted functions.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) promoted_funcs_map: HashMap&lt;FuncId, HashSet&lt;FuncId&gt;&gt;,
-    <span class="doccomment">/// Maps each function to a set of related static functions
+    <span class="doccomment">/// Maps each function to a set of related static functions.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) involved_static_funcs_map: HashMap&lt;FuncId, HashSet&lt;FuncId&gt;&gt;,
     <span class="comment">// Iterated in pointer analysis. When new function pags are constructed, we
     // put the new addr_edges into this queue to help active new constraints.
@@ -771,27 +771,27 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.graph
     }
 
-    <span class="doccomment">/// Return a iterator for the address_of edges.
+    <span class="doccomment">/// Return an iterator for the `address_of edges`.
     </span><span class="kw">pub fn </span>addr_edge_iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; chunked_queue::IterCopied&lt;PAGEdgeId&gt; {
         <span class="self">self</span>.addr_edges_queue.iter_copied()
     }
 
-    <span class="doccomment">/// Returns the path for the given node_id
+    <span class="doccomment">/// Returns the path for the given node_id.
     </span><span class="kw">pub fn </span>node_path(<span class="kw-2">&amp;</span><span class="self">self</span>, node_id: PAGNodeId) -&gt; <span class="kw-2">&amp;</span>P {
         <span class="self">self</span>.graph.node_weight(node_id).unwrap().path()
     }
 
-    <span class="doccomment">/// Returns the node for the given node_id
+    <span class="doccomment">/// Returns the node for the given node_id.
     </span><span class="kw">pub fn </span>get_node(<span class="kw-2">&amp;</span><span class="self">self</span>, node_id: PAGNodeId) -&gt; <span class="kw-2">&amp;</span>PAGNode&lt;P&gt; {
         <span class="self">self</span>.graph.node_weight(node_id).unwrap()
     }
 
-    <span class="doccomment">/// Returns the node for the given node_id
+    <span class="doccomment">/// Returns the node for the given node_id.
     </span><span class="kw">pub fn </span>get_node_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, node_id: PAGNodeId) -&gt; <span class="kw-2">&amp;mut </span>PAGNode&lt;P&gt; {
         <span class="self">self</span>.graph.node_weight_mut(node_id).unwrap()
     }
 
-    <span class="doccomment">/// Returns the node_id for the given path
+    <span class="doccomment">/// Returns the node_id for the given path.
     </span><span class="kw">pub fn </span>get_node_id(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>P) -&gt; <span class="prelude-ty">Option</span>&lt;PAGNodeId&gt; {
         <span class="kw">match </span><span class="self">self</span>.values.get(path) {
             <span class="prelude-val">Some</span>(id) =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">*</span>id),
@@ -799,7 +799,7 @@
         }
     }
 
-    <span class="doccomment">/// Returns the edge for the given edge_id
+    <span class="doccomment">/// Returns the edge for the given edge_id.
     </span><span class="kw">pub fn </span>get_edge(<span class="kw-2">&amp;</span><span class="self">self</span>, edge_id: PAGEdgeId) -&gt; <span class="kw-2">&amp;</span>PAGEdge {
         <span class="self">self</span>.graph.edge_weight(edge_id).unwrap()
     }
@@ -826,7 +826,7 @@
         }
     }
 
-    <span class="doccomment">/// Returns true if the edge from src path to dst path of the `kind` exits.
+    <span class="doccomment">/// Returns true if the edge from `src` to `dst` of the `kind` exists.
     </span><span class="kw">pub fn </span>has_edge(<span class="kw-2">&amp;</span><span class="self">self</span>, src: <span class="kw-2">&amp;</span>P, dst: <span class="kw-2">&amp;</span>P, kind: <span class="kw-2">&amp;</span>PAGEdgeEnum) -&gt; bool {
         <span class="kw">match </span>(<span class="self">self</span>.values.get(src), <span class="self">self</span>.values.get(dst)) {
             (<span class="prelude-val">Some</span>(src_id), <span class="prelude-val">Some</span>(dst_id)) =&gt; <span class="self">self</span>.contains_edge(<span class="kw-2">*</span>src_id, <span class="kw-2">*</span>dst_id, kind),
@@ -834,7 +834,7 @@
         }
     }
 
-    <span class="doccomment">/// Returns true if the edge from src to dst of the `kind` exits.
+    <span class="doccomment">/// Returns true if the edge from `src` to `dst` of the `kind` exists.
     </span><span class="kw">pub fn </span>contains_edge(<span class="kw-2">&amp;</span><span class="self">self</span>, src: PAGNodeId, dst: PAGNodeId, kind: <span class="kw-2">&amp;</span>PAGEdgeEnum) -&gt; bool {
         <span class="kw">for </span>edge <span class="kw">in </span><span class="self">self</span>.graph.edges_connecting(src, dst) {
             <span class="kw">if </span><span class="kw-2">&amp;</span>edge.weight().kind == kind {
@@ -901,8 +901,8 @@
         <span class="self">self</span>.offset_out_edges.entry(node_id).or_default().insert(out_edge);
     }
 
-    <span class="doccomment">/// Adds an edge from src to dst according to the edge type. 
-    /// Returns the edge id if this edge is newly added to the graph
+    <span class="doccomment">/// Adds an edge from `src` to `dst` according to the edge type. 
+    /// Returns the edge id if this edge is newly added to the graph.
     </span><span class="kw">pub fn </span>add_edge(<span class="kw-2">&amp;mut </span><span class="self">self</span>, src: <span class="kw-2">&amp;</span>P, dst: <span class="kw-2">&amp;</span>P, kind: PAGEdgeEnum) -&gt; <span class="prelude-ty">Option</span>&lt;PAGEdgeId&gt; {
         <span class="kw">match </span>kind {
             PAGEdgeEnum::AddrPAGEdge =&gt; <span class="self">self</span>.add_addr_edge(src, dst),
@@ -1028,7 +1028,7 @@
         <span class="prelude-val">None
     </span>}
 
-    <span class="doccomment">/// Given two paths, add direct edge between them if they are of pointer type or add direct
+    <span class="doccomment">/// Given two paths, add direct edge between them if they are both of pointer type or add direct
     /// edges between their pointer type fields if any. Return the edges added.
     </span><span class="kw">pub fn </span>add_new_direct_edges&lt;<span class="lifetime">'tcx</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -1084,13 +1084,13 @@
             <span class="self">self</span>.promoted_funcs_map.insert(func_id, promoted_funcs);
         }
 
-        <span class="comment">// Build pag for this function
+        <span class="comment">// Build pag for this function.
         </span><span class="kw">let </span><span class="kw-2">mut </span>fpag = FuncPAG::new(func_id);
         <span class="kw">let </span>mir = acx.tcx.optimized_mir(def_id);
         <span class="kw">let </span><span class="kw-2">mut </span>builder = fpag_builder::FuncPAGBuilder::new(acx, func_id, mir, <span class="kw-2">&amp;mut </span>fpag);
         builder.build();
 
-        <span class="comment">// Build function pags for static variables encountered in this function
+        <span class="comment">// Build function pags for static variables encountered in this function.
         </span><span class="kw">let </span><span class="kw-2">mut </span>static_funcs = HashSet::new();
         <span class="kw">for </span>static_variable <span class="kw">in </span><span class="kw-2">&amp;</span>fpag.static_variables_involved {
             <span class="kw">if let </span>PathEnum::StaticVariable { def_id } = static_variable.value {

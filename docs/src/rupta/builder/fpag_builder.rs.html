@@ -1823,10 +1823,24 @@
 <a href="#1821" id="1821">1821</a>
 <a href="#1822" id="1822">1822</a>
 <a href="#1823" id="1823">1823</a>
+<a href="#1824" id="1824">1824</a>
+<a href="#1825" id="1825">1825</a>
+<a href="#1826" id="1826">1826</a>
+<a href="#1827" id="1827">1827</a>
+<a href="#1828" id="1828">1828</a>
+<a href="#1829" id="1829">1829</a>
+<a href="#1830" id="1830">1830</a>
+<a href="#1831" id="1831">1831</a>
+<a href="#1832" id="1832">1832</a>
+<a href="#1833" id="1833">1833</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 &lt;Wei Li&gt;.
 //
 // This source code is licensed under the GNU license found in the
 // LICENSE file in the root directory of this source tree.
+
+</span><span class="doccomment">//! Builds the Pointer Assignment Graph (PAG) for a single function.
+//! 
+//! The Function PAG is part of the PAG for the whole program.
 
 </span><span class="kw">use </span>log::<span class="kw-2">*</span>;
 <span class="kw">use </span>std::borrow::Borrow;
@@ -1856,7 +1870,9 @@
 
 <span class="kw">use </span><span class="kw">super</span>::substs_specializer::SubstsSpecializer;
 
-<span class="kw">pub struct </span>FuncPAGBuilder&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>&gt; {
+<span class="doccomment">/// A visitor that traverses the MIR associated with a particular function's body and
+/// build the function's pointer assignment graph.
+</span><span class="kw">pub struct </span>FuncPAGBuilder&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) acx: <span class="kw-2">&amp;</span><span class="lifetime">'pta </span><span class="kw-2">mut </span>AnalysisContext&lt;<span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) func_id: FuncId,
     <span class="kw">pub</span>(<span class="kw">crate</span>) func_ref: Rc&lt;FunctionReference&lt;<span class="lifetime">'tcx</span>&gt;&gt;,
@@ -1877,9 +1893,8 @@
     }
 }
 
-<span class="doccomment">/// A visitor that traverses the MIR associated with a particular function's body and
-/// build the corresponding function pag.
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>&gt; FuncPAGBuilder&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>&gt; {
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>&gt; FuncPAGBuilder&lt;<span class="lifetime">'pta</span>, <span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>&gt; {
     <span class="kw">pub fn </span>new(
         acx: <span class="kw-2">&amp;</span><span class="lifetime">'pta </span><span class="kw-2">mut </span>AnalysisContext&lt;<span class="lifetime">'tcx</span>, <span class="lifetime">'compilation</span>&gt;,
         func_id: FuncId,
@@ -1918,25 +1933,29 @@
         <span class="self">self</span>.func_ref.def_id
     }
 
-    <span class="doccomment">/// If this function corresponds to a promoted constant
+    <span class="doccomment">/// Returns true if this function corresponds to an initialization procedure 
+    /// for a promoted constant.
     </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>is_promoted(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.func_ref.promoted.is_some()
     }
 
-    <span class="doccomment">/// If this function corresponds to an initialization procedure for a static item 
+    <span class="doccomment">/// Returns true if this function corresponds to an initialization procedure 
+    /// for a static item.
     </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>is_static(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.acx.tcx.is_static(<span class="self">self</span>.def_id())
     }
 
-    <span class="doccomment">/// If this function corresponds to an initialization procedure for a const item 
+    <span class="doccomment">/// Returns true if this function corresponds to an initialization procedure 
+    /// for a const item.
     </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>is_const(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="macro">matches!</span>(<span class="self">self</span>.tcx().def_kind(<span class="self">self</span>.def_id()), DefKind::Const)
     }
 
-    <span class="kw">pub fn </span>build(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+    <span class="doccomment">/// Builds the PAG. 
+    </span><span class="kw">pub fn </span>build(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.visit_body();
 
         <span class="comment">// Add extra edges between the return value and the promoted_path/static_path
@@ -1962,11 +1981,11 @@
 
     <span class="kw">pub fn </span>visit_body(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">for </span>bb <span class="kw">in </span><span class="self">self</span>.mir.basic_blocks.indices() {
-            <span class="self">self</span>.visit_baisc_block(bb);
+            <span class="self">self</span>.visit_basic_block(bb);
         }
     }
 
-    <span class="kw">fn </span>visit_baisc_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bb: mir::BasicBlock) {
+    <span class="kw">fn </span>visit_basic_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bb: mir::BasicBlock) {
         <span class="kw">let </span>mir::BasicBlockData {
             <span class="kw-2">ref </span>statements,
             <span class="kw-2">ref </span>terminator,
@@ -2014,28 +2033,29 @@
         }
     }
 
-    <span class="doccomment">/// Write the RHS Rvalue to the LHS Place.
+    <span class="doccomment">/// An assignment statement writes the RHS Rvalue to the LHS Place.
     </span><span class="kw">fn </span>visit_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, place: <span class="kw-2">&amp;</span>mir::Place&lt;<span class="lifetime">'tcx</span>&gt;, rvalue: <span class="kw-2">&amp;</span>mir::Rvalue&lt;<span class="lifetime">'tcx</span>&gt;) {
         <span class="kw">let </span>(lh_path, lh_type) = <span class="self">self</span>.get_path_and_type_for_place(place);
 
-        <span class="comment">// Skip this assignment if the destination path is not pointer type or an adt containing pointer fields
-        // The lh type maybe a opaque type which need to be determined by the rh type
+        <span class="comment">// Skip this assignment if the destination path is not pointer and does not 
+        // contain pointer type fields. 
+        // The lh type maybe a opaque type, we need to determine the actual type 
+        // according to the rh type.
         </span><span class="kw">if </span>!lh_type.is_any_ptr() &amp;&amp; <span class="self">self</span>.acx.get_pointer_projections(lh_type).is_empty() {
             <span class="kw">return</span>;
         }
 
         <span class="self">self</span>.visit_rvalue(lh_path.clone(), rvalue);
 
-        <span class="comment">// If this assignment writes to a field or subfield of a union, add edges between the union fields that
-        // share the same memory offset 
+        <span class="comment">// If this assignment writes to a field or subfield of a union, add edges 
+        // between the union fields that share the same memory offset.
         </span><span class="self">self</span>.cast_between_union_fields(<span class="kw-2">&amp;</span>lh_path);
     }
 
     <span class="doccomment">/// Denotes a call to the intrinsic function copy_nonoverlapping, where `src` and `dst` denotes the
-    /// memory being read from and written to (`src` and `dst` must each be a reference, pointer, or Box
-    /// pointing to the same type T) and count indicates how many bytes are being copied over (count must
-    /// evaluate to a usize).
-    /// Can be regarded as `*dst = *src`
+    /// memory being read from and written to and size indicates how many bytes are being copied over.
+    /// `src` and `dst` must each be a reference, pointer, or `Box` pointing to the same type T.
+    /// A copy_nonoverlapping statement can be regarded as a statement like `*dst = *src`.
     </span><span class="kw">fn </span>visit_copy_non_overlapping(<span class="kw-2">&amp;mut </span><span class="self">self</span>, copy_info: <span class="kw-2">&amp;</span>mir::CopyNonOverlapping&lt;<span class="lifetime">'tcx</span>&gt;) {
         <span class="kw">let </span><span class="kw-2">mut </span>get_ptr_path = |operand: <span class="kw-2">&amp;</span>mir::Operand&lt;<span class="lifetime">'tcx</span>&gt;| -&gt; Rc&lt;Path&gt; {
             <span class="kw">match </span>operand {
@@ -2076,7 +2096,7 @@
         );
     }
 
-    <span class="doccomment">/// Write the discriminant for a variant to the enum Place.
+    <span class="doccomment">/// Writes the discriminant for a variant to the enum Place.
     </span><span class="kw">fn </span>visit_set_discriminant(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         _place: <span class="kw-2">&amp;</span>mir::Place&lt;<span class="lifetime">'tcx</span>&gt;,
@@ -2084,7 +2104,7 @@
     ) {
     }
 
-    <span class="doccomment">/// Deinitializes the place. This writes uninit bytes to the entire place.
+    <span class="doccomment">/// Deinitializes the place. This writes `uninit` bytes to the entire place.
     </span><span class="kw">fn </span>visit_deinit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _place: <span class="kw-2">&amp;</span>mir::Place&lt;<span class="lifetime">'tcx</span>&gt;) {}
 
     <span class="doccomment">/// Start a live range for the storage of the local.
@@ -2116,7 +2136,8 @@
         }
     }
 
-    <span class="doccomment">/// We only consider the call statements currently.
+    <span class="doccomment">/// Terminator for a basic block. 
+    /// We only analyze the call statements in a flow-insensitive pointer analysis.
     </span><span class="kw">fn </span>visit_terminator(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         location: mir::Location,
@@ -2213,7 +2234,7 @@
         args_paths
     }
 
-    <span class="doccomment">/// Calls a specialized visitor for each kind of Rvalue
+    <span class="doccomment">/// Calls a specialized visitor for each kind of Rvalue.
     </span><span class="kw">fn </span>visit_rvalue(<span class="kw-2">&amp;mut </span><span class="self">self</span>, lh_path: Rc&lt;Path&gt;, rvalue: <span class="kw-2">&amp;</span>mir::Rvalue&lt;<span class="lifetime">'tcx</span>&gt;) {
         <span class="kw">match </span>rvalue {
             mir::Rvalue::Use(operand) =&gt; {
@@ -2253,7 +2274,7 @@
         }
     }
 
-    <span class="doccomment">/// path = x (either a move or copy, depending on type of x), or path = constant.
+    <span class="doccomment">/// `path = x` (either a move or copy, depending on type of `x`), or `path = constant`.
     </span><span class="kw">fn </span>visit_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, lh_path: Rc&lt;Path&gt;, operand: <span class="kw-2">&amp;</span>mir::Operand&lt;<span class="lifetime">'tcx</span>&gt;) {
         <span class="kw">match </span>operand {
             <span class="comment">// Currently we do not seperate copy and move cases.
@@ -2283,7 +2304,7 @@
             <span class="self">self</span>.acx.set_path_rustc_type(lh_path.clone(), rh_type);
         }
 
-        <span class="comment">// Assignment of format: (*lbase).elem = (*rbase).elem
+        <span class="comment">// An assignment of format: (*lbase).elem = (*rbase).elem
         </span><span class="kw">if </span>lh_path.is_deref_path() &amp;&amp; rh_path.is_deref_path() {
             <span class="macro">debug!</span>(
                 <span class="string">"Assignment: (*lbase).elem = (*rbase).elem: {:?} = {:?}"</span>,
@@ -2331,8 +2352,8 @@
         };
     }
 
-    <span class="doccomment">/// Returns a value that corresponds to the given literal
-    </span><span class="kw">pub fn </span>visit_const_operand(<span class="kw-2">&amp;mut </span><span class="self">self</span>, const_op: <span class="kw-2">&amp;</span>mir::ConstOperand&lt;<span class="lifetime">'tcx</span>&gt;) -&gt; Rc&lt;Path&gt; {
+    <span class="doccomment">/// Returns a value that corresponds to the given literal.
+    </span><span class="kw">fn </span>visit_const_operand(<span class="kw-2">&amp;mut </span><span class="self">self</span>, const_op: <span class="kw-2">&amp;</span>mir::ConstOperand&lt;<span class="lifetime">'tcx</span>&gt;) -&gt; Rc&lt;Path&gt; {
         <span class="kw">let </span>mir::ConstOperand { const_, .. } = const_op;
         <span class="kw">match </span>const_ {
             <span class="comment">// This constant came from the type system
@@ -2344,14 +2365,14 @@
         }
     }
 
-    <span class="doccomment">/// Synthesizes a constant value from a RustC constant as used in the type system
-    </span><span class="kw">pub fn </span>visit_const(<span class="kw-2">&amp;mut </span><span class="self">self</span>, c: <span class="kw-2">&amp;</span>ty::Const&lt;<span class="lifetime">'tcx</span>&gt;) -&gt; Rc&lt;Path&gt; {
+    <span class="doccomment">/// Synthesizes a constant value from a RustC constant as used in the type system.
+    </span><span class="kw">fn </span>visit_const(<span class="kw-2">&amp;mut </span><span class="self">self</span>, c: <span class="kw-2">&amp;</span>ty::Const&lt;<span class="lifetime">'tcx</span>&gt;) -&gt; Rc&lt;Path&gt; {
         <span class="macro">debug!</span>(<span class="string">"Visiting constant came from the type system: {c:?}"</span>);
         Path::new_constant()
     }
 
     <span class="doccomment">/// Synthesizes a constant value from an unevaluated mir constant which is not part of the type system.
-    </span><span class="kw">pub fn </span>visit_unevaluated_const(
+    </span><span class="kw">fn </span>visit_unevaluated_const(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         unevaluated: <span class="kw-2">&amp;</span>mir::UnevaluatedConst&lt;<span class="lifetime">'tcx</span>&gt;,
         ty: Ty&lt;<span class="lifetime">'tcx</span>&gt;,
@@ -2439,7 +2460,7 @@
     }
 
     <span class="doccomment">/// Creates an array where each element is the value of the operand.
-    /// Corresponds to source code like [x; 32].
+    /// Corresponds to source code like `[x; 32]`.
     </span><span class="kw">fn </span>visit_repeat(<span class="kw-2">&amp;mut </span><span class="self">self</span>, lh_path: Rc&lt;Path&gt;, operand: <span class="kw-2">&amp;</span>mir::Operand&lt;<span class="lifetime">'tcx</span>&gt;, _count: <span class="kw-2">&amp;</span>Const&lt;<span class="lifetime">'tcx</span>&gt;) {
         <span class="kw">let </span>lh_type = <span class="self">self</span>.acx.get_path_rustc_type(<span class="kw-2">&amp;</span>lh_path).unwrap();
         <span class="kw">if let </span>TyKind::Array(elem_ty, <span class="kw">_</span>) = lh_type.kind() {
@@ -2449,17 +2470,18 @@
         }
     }
 
-    <span class="doccomment">/// Currently we do not seperate ref and address_of assignments.
-    /// Ref: Creates a reference of the indicated kind to the place. e.g.path = &amp;x or &amp;mut x
+    <span class="doccomment">/// Analyzes the `ref` and `address_of` assignments.
+    /// 
+    /// Ref: Creates a reference of the indicated kind to the place. e.g. `path = &amp;x` or `&amp;mut x`
     /// AddressOf: Creates a pointer with the indicated mutability to the place.
-    ///            This is generated by pointer casts like &amp;v as *const _ or raw address of
-    ///            expressions like &amp;raw v or addr_of!(v).
+    ///            This is generated by pointer casts like `&amp;v` as `*const _` or raw address of
+    ///            expressions like `&amp;raw v` or `addr_of!(v)`.
     </span><span class="kw">fn </span>visit_ref_or_address_of(<span class="kw-2">&amp;mut </span><span class="self">self</span>, lh_path: Rc&lt;Path&gt;, place: <span class="kw-2">&amp;</span>mir::Place&lt;<span class="lifetime">'tcx</span>&gt;) {
         <span class="comment">// debug!("Ref/AddressOf Assignment");
         </span><span class="kw">let </span>rh_path = <span class="self">self</span>.get_path_for_place(place);
 
         <span class="comment">// If the lh_path is a deref path, we need to add a temporary local variable,
-        // e.g. (*_1).2 = &amp;rh_path; ==&gt; _TMP = &amp;rh_path; (*_1).2 = _TMP;
+        // e.g. `(*_1).2 = &amp;rh_path;` ==&gt; `_TMP = &amp;rh_path; (*_1).2 = _TMP`;
         </span><span class="kw">let </span>lh_path = <span class="kw">if </span>lh_path.is_deref_path() {
             <span class="kw">let </span>lh_type = <span class="self">self</span>.acx.get_path_rustc_type(<span class="kw-2">&amp;</span>lh_path).unwrap();
             <span class="kw">let </span>aux = <span class="self">self</span>.create_aux_local(lh_type);
@@ -2568,18 +2590,19 @@
             <span class="comment">// Go from a safe fn pointer to an unsafe fn pointer.
             </span>| mir::CastKind::PointerCoercion(PointerCoercion::UnsafeFnPointer) =&gt; {
                 <span class="comment">// These kinds of pointer casts do not re-interpret the bits of the input as a 
-                // different type. We simply treat them as simple assignments.
-                </span><span class="kw">match </span>operand {
+                // different type. We simply treat them as direct assignments.
+                </span><span class="kw">let </span>rh_path = <span class="kw">match </span>operand {
                     mir::Operand::Move(place) | mir::Operand::Copy(place) =&gt; {
-                        <span class="kw">let </span>rh_path = <span class="self">self</span>.get_path_for_place(place);
-                        <span class="self">self</span>.add_direct_edge(rh_path, lh_path);
+                        <span class="self">self</span>.get_path_for_place(place)
                     }
-                    <span class="kw">_ </span>=&gt; {
-                        <span class="macro">unreachable!</span>(<span class="string">"
-                            Unexpected type of operand in MutToConstPointer/UnsafeFnPointer pointer cast!"
+                    mir::Operand::Constant(<span class="kw">box </span>const_op) =&gt; {
+                        <span class="macro">debug!</span>(<span class="string">"
+                            DynStar/MutToConstPointer/UnsafeFnPointer cast from a const operand!"
                         </span>);
+                        <span class="self">self</span>.visit_const_operand(const_op)
                     }
-                }
+                };
+                <span class="self">self</span>.add_direct_edge(rh_path, lh_path);
             }
             <span class="comment">// Go from a fn-item type to a fn-pointer type.
             // For example: ``` p = foo as fn(i32) -&gt; i32 (Pointer(ReifyFnPointer)); ```
@@ -2724,8 +2747,6 @@
     }
 
     <span class="doccomment">/// Creates an aggregate value, like a tuple or struct.
-    /// This is needed because dataflow analysis needs to distinguish dest = Foo { x: ..., y: ... } 
-    /// from dest.x = ...; dest.y = ...; in the case that Foo has a destructor.
     </span><span class="kw">fn </span>visit_aggregate(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lh_path: Rc&lt;Path&gt;,
@@ -2807,7 +2828,7 @@
         }
     }
 
-    <span class="doccomment">/// Transmutes a `*mut u8` into shallow-initialized `Box&lt;T&gt;`.
+    <span class="doccomment">/// Transmutes a `*mut u8` into a shallow-initialized `Box&lt;T&gt;`.
     ///
     /// This is different from a normal transmute because dataflow analysis will treat the box
     /// as initialized but its content as uninitialized.
@@ -2829,7 +2850,7 @@
     }
 
 
-    <span class="doccomment">/// Handle the statically dispatched and dynamically dispatched calls. 
+    <span class="doccomment">/// Try to resolve a function calls. 
     </span><span class="kw">fn </span>resolve_call(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         callee_def_id: <span class="kw-2">&amp;</span>DefId,
@@ -2913,7 +2934,7 @@
     ) {
         <span class="comment">// The fn_traits feature allows for implementation of the Fn* traits for
         // creating custom closure-like types. We first try to devirtualize the callee function
-        // https://doc.rust-lang.org/beta/unstable-book/library-features/fn-traits.html
+        // &lt;https://doc.rust-lang.org/beta/unstable-book/library-features/fn-traits.html&gt;
         </span><span class="kw">let </span>param_env = rustc_middle::ty::ParamEnv::reveal_all();
         <span class="comment">// Instance::resolve panics if try_normalize_erasing_regions returns an error.
         // It is hard to figure out exactly when this will be the case.
@@ -2987,11 +3008,12 @@
         }
     }
 
-    <span class="doccomment">/// Fn::call, FnMut::call_mut, FnOnce::call_once all receive two arguments:
-    /// 1. Operand of any type that implements Fn|FnMut|FnOnce, a function pointer or closure instance for most cases.
+    <span class="doccomment">/// `Fn::call`, `FnMut::call_mut`, `FnOnce::call_once` all receive two arguments:
+    /// 1. An operand of any type that implements `Fn`|`FnMut`|`FnOnce`, including function items, 
+    ///    function pointers and closures.
     /// 2. A tuple of argument values for the call.
     /// The tuple is unpacked and the callee is then invoked with its normal function signature.
-    /// In the case of calling a closure, the closure signature includes the closure as the first argument.
+    /// In the case of calling a closure, the closure is included as the first argument.
     ///
     /// All of this happens in code that is not encoded as MIR, so we need built in support for it.
     </span><span class="kw">pub fn </span>inline_indirectly_called_function(
@@ -3128,8 +3150,8 @@
         }
     }
 
-        <span class="doccomment">/// If the source path and destination path are both of pointer types, add a direct edge between them. 
-    /// Otherwise, get the pointer fields if exist and add internal edges between the pointer fields.
+    <span class="doccomment">/// If the source path and the destination path are both of pointer types, add a direct edge between them. 
+    /// Otherwise, get their pointer type fields if exist and add internal edges between these fields.
     </span><span class="kw">pub fn </span>add_internal_edges(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         src_path: Rc&lt;Path&gt;,
@@ -3170,7 +3192,7 @@
     }
 
 
-    <span class="doccomment">/// Add edges between the union fields that share the same memory offset (in projection path_repr mode only)
+    <span class="doccomment">/// Adds edges between the union fields that share the same memory offset
     </span><span class="kw">fn </span>cast_between_union_fields(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>Rc&lt;Path&gt;) {
         <span class="kw">let </span>retrieve_union_fields = |path: <span class="kw-2">&amp;</span>Rc&lt;Path&gt;| -&gt; Vec&lt;(Rc&lt;Path&gt;, usize)&gt; {
             <span class="kw">let </span><span class="kw-2">mut </span>ret = Vec::new();
@@ -3258,15 +3280,12 @@
     }
 
     <span class="doccomment">/// Creates an auxiliary local variable with the given type.
-    /// Returns the path of the auxiliary local variable.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>create_aux_local(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: Ty&lt;<span class="lifetime">'tcx</span>&gt;) -&gt; Rc&lt;Path&gt; {
         <span class="self">self</span>.acx.create_aux_local(<span class="self">self</span>.func_id, ty)
     }
 
-    <span class="doccomment">/// Creates a path that dereferences the given pointer or reference path.
-    /// Auxiliary variables are created if the given path is a qualified path.
-    /// Returns the derefernce path.
+    <span class="doccomment">/// Creates a dereference path for the given pointer or reference path.
     </span><span class="attr">#[allow(unused)]
     </span><span class="kw">fn </span>create_dereference(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr_path: Rc&lt;Path&gt;, ptr_ty: Ty&lt;<span class="lifetime">'tcx</span>&gt;) -&gt; Rc&lt;Path&gt; {
         <span class="kw">let </span>deref_path = <span class="kw">if let </span>PathEnum::QualifiedPath { .. } = ptr_path.value {
@@ -3281,7 +3300,7 @@
         deref_path
     }
 
-    <span class="doccomment">/// Returns a parameter environment for the current function.
+    <span class="doccomment">/// Returns the parameter environment for the current function.
     </span><span class="kw">pub fn </span>get_param_env(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; rustc_middle::ty::ParamEnv&lt;<span class="lifetime">'tcx</span>&gt; {
         <span class="kw">let </span>def_id = <span class="self">self</span>.def_id();
         <span class="kw">let </span>env_def_id = <span class="kw">if </span><span class="self">self</span>.tcx().is_closure_or_coroutine(def_id) {
@@ -3292,8 +3311,8 @@
         <span class="self">self</span>.tcx().param_env(env_def_id)
     }
 
-    <span class="doccomment">/// Copy the value at source_path to a value at target_path.
-    /// If the type of value at source_path is different from that at target_path, the value is transmuted.
+    <span class="doccomment">/// Copy the value at `source_path` to a value at `target_path`.
+    /// If the type of `source_path` is different from that at `target_path`, the value is transmuted.
     </span><span class="kw">pub fn </span>copy_and_transmute(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         source_path: Rc&lt;Path&gt;,
@@ -3350,8 +3369,8 @@
     }
 
     <span class="comment">// Transmute from one pointer to another pointer.
-    // If the source and target pointers are if the equivalent pointer types, add 
-    // a direct edge between them, otherwise add a cast edge between them 
+    // If the source and target pointers are of equivalent pointer types, add 
+    // a direct edge between them, otherwise add a cast edge between them.
     </span><span class="kw">fn </span>transmute_pointers(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         source_path: Rc&lt;Path&gt;,
@@ -3388,7 +3407,7 @@
         }
     }
 
-    <span class="comment">// Returns a Function path for the given def_id and substs, even if the corresponding mir
+    <span class="comment">// Returns a Function path for the given `def_id` and `gen_args`, no matter if the corresponding mir
     // is unavailable.
     // If the function refers to a specific implementation of a trait method, devirtualize it.
     </span><span class="kw">fn </span>visit_function_reference(<span class="kw-2">&amp;mut </span><span class="self">self</span>, def_id: DefId, gen_args: GenericArgsRef&lt;<span class="lifetime">'tcx</span>&gt;) -&gt; Rc&lt;Path&gt; {
@@ -3426,7 +3445,7 @@
         (path, ty)
     }
 
-    <span class="doccomment">/// Returns a Path instance that is essentially the same as the Place instance
+    <span class="doccomment">/// Returns a `Path` instance that resembles the `Place` instance.
     </span><span class="kw">fn </span>get_path_for_place(<span class="kw-2">&amp;mut </span><span class="self">self</span>, place: <span class="kw-2">&amp;</span>mir::Place&lt;<span class="lifetime">'tcx</span>&gt;) -&gt; Rc&lt;Path&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(path) = <span class="self">self</span>.path_cache.get(place) {
             <span class="kw">return </span>path.clone();
@@ -3448,7 +3467,7 @@
         }
     }
 
-    <span class="doccomment">/// Returns a path that is qualified by the selector corresponding to projection.elem.
+    <span class="doccomment">/// Returns a path that is qualified by the selector corresponding to the projection.elem.
     /// If projection has a base, the give base_path is first qualified with the base.
     </span><span class="kw">fn </span>visit_projection(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -3519,7 +3538,7 @@
         (result, ty)
     }
 
-    <span class="doccomment">/// Returns a PathSelector instance that is essentially the same as the ProjectionElem instance
+    <span class="doccomment">/// Returns a PathSelector instance that resembles the ProjectionElem instance.
     </span><span class="kw">fn </span>visit_projection_elem(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         base_ty: Ty&lt;<span class="lifetime">'tcx</span>&gt;,
@@ -3550,10 +3569,8 @@
         }
     }
 
-    <span class="doccomment">/// Return the path of the pointer at field 0 of the NonNull pointer at field 0
-    /// of the Unique pointer at field 0 of the box
-    /// create an auxiliary variable to represent this sub-field.
-    </span><span class="kw">pub fn </span>get_box_pointer_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>, box_path: Rc&lt;Path&gt;, ty: Ty&lt;<span class="lifetime">'tcx</span>&gt;) -&gt; Rc&lt;Path&gt; {
+    <span class="doccomment">/// Returns the raw pointer field of a `Box` value. 
+    </span><span class="kw">fn </span>get_box_pointer_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>, box_path: Rc&lt;Path&gt;, ty: Ty&lt;<span class="lifetime">'tcx</span>&gt;) -&gt; Rc&lt;Path&gt; {
         <span class="comment">// Box.0 = Unique, Unique.0 = NonNull, NonNull.0 = source thin pointer
         </span><span class="kw">let </span>projection = <span class="macro">vec!</span>[
             PathSelector::Field(<span class="number">0</span>),
@@ -3582,7 +3599,8 @@
         <span class="self">self</span>.add_edge(src, dst, PAGEdgeEnum::DirectPAGEdge);
     }
 
-    <span class="doccomment">/// For (*p).f1.f2...fn = q, add a Store edge 'q --STORE(f1.f2...fn)--&gt; p'
+    <span class="doccomment">/// Adds a store edge from `src` to `dst`.
+    /// Given a store statement ```(*p).f1.f2...fn = q```, a store edge of format `q --STORE(f1.f2...fn)--&gt; p` is added.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>add_store_edge(<span class="kw-2">&amp;mut </span><span class="self">self</span>, src: Rc&lt;Path&gt;, dst: Rc&lt;Path&gt;) {
         <span class="kw">if let </span>PathEnum::QualifiedPath { base, projection } = <span class="kw-2">&amp;</span>dst.value {
@@ -3594,7 +3612,8 @@
         }
     }
 
-    <span class="doccomment">/// For p = (*q).f1.f2...fn, add a Load edge 'q --LOAD(f1.f2...fn)--&gt; p'
+    <span class="doccomment">/// Adds a load edge from `src` to `dst`.
+    /// Given a load statement ```p = (*q).f1.f2...fn```, a Load edge `q --LOAD(f1.f2...fn)--&gt; p` is added.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>add_load_edge(<span class="kw-2">&amp;mut </span><span class="self">self</span>, src: Rc&lt;Path&gt;, dst: Rc&lt;Path&gt;) {
         <span class="kw">if let </span>PathEnum::QualifiedPath { base, projection } = <span class="kw-2">&amp;</span>src.value {
@@ -3606,7 +3625,8 @@
         }
     }
 
-    <span class="doccomment">/// For p = &amp;((*q).f1.f2...fn), add a Gep edge 'q --GEP(f1.f2...fn)--&gt; p'
+    <span class="doccomment">/// Adds a gep edge from `src` to `dst`.
+    /// Given a gep statement ```p = &amp;((*q).f1.f2...fn)```, a gep edge `q --GEP(f1.f2...fn)--&gt; p` is added.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>add_gep_edge(<span class="kw-2">&amp;mut </span><span class="self">self</span>, src: Rc&lt;Path&gt;, dst: Rc&lt;Path&gt;) {
         <span class="kw">if let </span>PathEnum::QualifiedPath { base, projection } = <span class="kw-2">&amp;</span>src.value {
@@ -3634,7 +3654,7 @@
         <span class="self">self</span>.fpag.add_internal_edge(src, dst, kind);
     }
     
-    <span class="doccomment">/// Create a new callsite
+    <span class="doccomment">/// Creates a new callsite.
     </span><span class="kw">fn </span>new_callsite(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         func_id: FuncId,
